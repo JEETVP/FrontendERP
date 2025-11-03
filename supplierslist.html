@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Proveedores - Sistema Hospitalario</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .navbar-brand {
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            padding: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-menu {
+            display: flex;
+            list-style: none;
+            gap: 5px;
+        }
+
+        .navbar-menu li a {
+            color: white;
+            text-decoration: none;
+            padding: 20px 18px;
+            display: block;
+            transition: background 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .navbar-menu li a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-menu li a.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-bottom: 3px solid white;
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: white;
+        }
+
+        .user-info {
+            text-align: right;
+            font-size: 13px;
+        }
+
+        .user-name {
+            font-weight: 600;
+        }
+
+        .user-role {
+            opacity: 0.9;
+            font-size: 12px;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* Back link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            transition: gap 0.3s ease;
+        }
+
+        .back-link:hover {
+            gap: 12px;
+        }
+
+        /* Header */
+        .page-header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-size: 28px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Filters */
+        .filters {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 25px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-help {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        /* Table */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8f9fa;
+        }
+
+        thead th {
+            padding: 16px 20px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s ease;
+            cursor: pointer;
+        }
+
+        tbody tr:hover {
+            background: #f8f9ff;
+        }
+
+        tbody td {
+            padding: 18px 20px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .supplier-name {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .supplier-rfc {
+            color: #999;
+            font-size: 12px;
+            font-family: monospace;
+        }
+
+        .contact-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .contact-item {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-leadtime {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .badge-currency {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        /* Loading */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-title {
+            font-size: 20px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+            color: #999;
+        }
+
+        /* Alert */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-error {
+            background-color: #fee;
+            color: #c33;
+            border-left: 4px solid #c33;
+        }
+
+        .alert-success {
+            background-color: #efe;
+            color: #3c3;
+            border-left: 4px solid #3c3;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar-menu {
+                display: none;
+            }
+
+            .page-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .btn-add {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .table-container {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 900px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">
+                🏥 Sistema Hospitalario
+            </div>
+            <ul class="navbar-menu">
+                <li><a href="users-list.html">Usuarios</a></li>
+                <li><a href="medications.html">Medicamentos</a></li>
+                <li><a href="suppliers.html" class="active">Proveedores</a></li>
+                <li><a href="purchase-orders-list.html">Compras</a></li>
+                <li><a href="inventory-transactions-list.html">Inventario</a></li>
+                <li><a href="notifications-list.html">Notificaciones</a></li>
+            </ul>
+            <div class="navbar-user">
+                <div class="user-info">
+                    <div class="user-name" id="userName">Usuario</div>
+                    <div class="user-role" id="userRole">Rol</div>
+                </div>
+                <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Container -->
+    <div class="container">
+        <a href="suppliers.html" class="back-link">
+            ← Volver al menú de proveedores
+        </a>
+
+        <!-- Alert -->
+        <div id="alert" class="alert"></div>
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Directorio de Proveedores</h1>
+            <a href="supplier-create.html" class="btn-add" id="btnAdd">
+                <span>➕</span>
+                <span>Nuevo Proveedor</span>
+            </a>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    id="searchInput"
+                    placeholder="🔍 Buscar por nombre, RFC o correo electrónico..."
+                >
+            </div>
+            <div class="search-help">
+                La búsqueda se realiza automáticamente mientras escribes
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container">
+            <table id="suppliersTable">
+                <thead>
+                    <tr>
+                        <th>Proveedor</th>
+                        <th>Contacto</th>
+                        <th>Términos de Pago</th>
+                        <th>Tiempo de Entrega</th>
+                        <th>Moneda</th>
+                    </tr>
+                </thead>
+                <tbody id="suppliersTableBody">
+                    <!-- Datos cargados dinámicamente -->
+                </tbody>
+            </table>
+            
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">🏢</div>
+                <div class="empty-state-title">No se encontraron proveedores</div>
+                <div class="empty-state-text">Intenta con otros términos de búsqueda o crea uno nuevo</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración del API
+        const API_BASE_URL = 'https://backenderp-316e.onrender.com/api';
+        
+        // Variables globales
+        let allSuppliers = [];
+        let currentUser = null;
+        let searchTimeout = null;
+
+        // Elementos del DOM
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const alertBox = document.getElementById('alert');
+        const suppliersTableBody = document.getElementById('suppliersTableBody');
+        const emptyState = document.getElementById('emptyState');
+        const searchInput = document.getElementById('searchInput');
+        const userName = document.getElementById('userName');
+        const userRole = document.getElementById('userRole');
+        const btnAdd = document.getElementById('btnAdd');
+
+        // Función para verificar autenticación
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (!token || !user) {
+                window.location.href = 'login.html';
+                return null;
+            }
+
+            const loginTime = new Date(localStorage.getItem('loginTime'));
+            const now = new Date();
+            const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+            
+            if (hoursDiff >= 8) {
+                logout();
+                return null;
+            }
+
+            currentUser = JSON.parse(user);
+            return token;
+        }
+
+        // Función para cerrar sesión
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('loginTime');
+            window.location.href = 'login.html';
+        }
+
+        // Función para mostrar alertas
+        function showAlert(message, type = 'error') {
+            alertBox.textContent = message;
+            alertBox.className = `alert alert-${type} show`;
+            
+            setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, 5000);
+        }
+
+        // Función para mostrar/ocultar loading
+        function toggleLoading(show) {
+            loadingOverlay.classList.toggle('show', show);
+        }
+
+        // Mostrar información del usuario en navbar
+        function updateNavbarUser() {
+            if (currentUser) {
+                userName.textContent = currentUser.name || 'Usuario';
+                const roleText = currentUser.isSuperUser ? 'SuperUser' : 
+                                currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
+                userRole.textContent = roleText;
+            }
+        }
+
+        // Verificar permisos para crear
+        function checkPermissions() {
+            const hasPermission = currentUser.isSuperUser || 
+                                 currentUser.role === 'admin' || 
+                                 currentUser.role === 'manager';
+            
+            if (!hasPermission) {
+                btnAdd.style.display = 'none';
+            }
+        }
+
+        // Función para cargar proveedores
+        async function loadSuppliers(searchQuery = '') {
+            const token = checkAuth();
+            if (!token) return;
+
+            toggleLoading(true);
+
+            try {
+                const url = searchQuery 
+                    ? `${API_BASE_URL}/suppliers?q=${encodeURIComponent(searchQuery)}`
+                    : `${API_BASE_URL}/suppliers`;
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.ok) {
+                    allSuppliers = data.data || [];
+                    renderSuppliers(allSuppliers);
+                } else {
+                    showAlert(data.message || 'Error al cargar proveedores', 'error');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error de conexión al cargar proveedores', 'error');
+            } finally {
+                toggleLoading(false);
+            }
+        }
+
+        // Función para renderizar proveedores
+        function renderSuppliers(suppliers) {
+            suppliersTableBody.innerHTML = '';
+
+            if (!suppliers || suppliers.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            suppliers.forEach(supplier => {
+                const row = document.createElement('tr');
+                row.onclick = () => viewSupplier(supplier._id);
+                
+                // Contacto
+                const contactInfo = [];
+                if (supplier.emails && supplier.emails.length > 0) {
+                    contactInfo.push(`📧 ${supplier.emails[0]}`);
+                }
+                if (supplier.phones && supplier.phones.length > 0) {
+                    contactInfo.push(`📞 ${supplier.phones[0]}`);
+                }
+
+                const contactHtml = contactInfo.length > 0 
+                    ? `<div class="contact-list">${contactInfo.map(c => `<div class="contact-item">${c}</div>`).join('')}</div>`
+                    : '<span style="color: #999;">Sin contacto</span>';
+
+                row.innerHTML = `
+                    <td>
+                        <div class="supplier-name">${supplier.name || 'N/A'}</div>
+                        <div class="supplier-rfc">${supplier.rfc || 'Sin RFC'}</div>
+                    </td>
+                    <td>${contactHtml}</td>
+                    <td>${supplier.paymentTerms || 'No especificado'}</td>
+                    <td>
+                        ${supplier.leadTimeDays 
+                            ? `<span class="badge badge-leadtime">${supplier.leadTimeDays} días</span>` 
+                            : 'No especificado'}
+                    </td>
+                    <td>
+                        ${supplier.defaultCurrency 
+                            ? `<span class="badge badge-currency">${supplier.defaultCurrency}</span>` 
+                            : '<span class="badge badge-currency">MXN</span>'}
+                    </td>
+                `;
+                suppliersTableBody.appendChild(row);
+            });
+        }
+
+        // Función para ver detalles de un proveedor
+        function viewSupplier(id) {
+            window.location.href = `supplier-detail.html?id=${id}`;
+        }
+
+        // Búsqueda con debounce
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                loadSuppliers(e.target.value.trim());
+            }, 500);
+        });
+
+        // Verificar si se regresa desde creación exitosa
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('created') === 'true') {
+                showAlert('Proveedor creado exitosamente', 'success');
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        });
+
+        // Inicializar
+        (function init() {
+            const token = checkAuth();
+            if (token) {
+                updateNavbarUser();
+                checkPermissions();
+                loadSuppliers();
+            }
+        })();
+    </script>
+</body>
+</html>

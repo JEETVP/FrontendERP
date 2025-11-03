@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Medicamento - Sistema Hospitalario</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .navbar-brand {
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            padding: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-menu {
+            display: flex;
+            list-style: none;
+            gap: 5px;
+        }
+
+        .navbar-menu li a {
+            color: white;
+            text-decoration: none;
+            padding: 20px 18px;
+            display: block;
+            transition: background 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .navbar-menu li a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-menu li a.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-bottom: 3px solid white;
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: white;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* Back button */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            transition: gap 0.3s ease;
+        }
+
+        .back-link:hover {
+            gap: 12px;
+        }
+
+        /* Form Card */
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            padding: 40px;
+        }
+
+        .form-header {
+            margin-bottom: 30px;
+        }
+
+        .form-title {
+            font-size: 28px;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Form Sections */
+        .form-section {
+            margin-bottom: 35px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .form-section:last-of-type {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group label .required {
+            color: #e74c3c;
+            margin-left: 3px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #aaa;
+        }
+
+        /* Checkbox group */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* Help text */
+        .help-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        /* Buttons */
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        /* Alert */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-size: 14px;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-error {
+            background-color: #fee;
+            color: #c33;
+            border-left: 4px solid #c33;
+        }
+
+        .alert-success {
+            background-color: #efe;
+            color: #3c3;
+            border-left: 4px solid #3c3;
+        }
+
+        /* Loading */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar-menu {
+                display: none;
+            }
+
+            .form-card {
+                padding: 25px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">
+                🏥 Sistema Hospitalario
+            </div>
+            <ul class="navbar-menu">
+                <li><a href="users-list.html">Usuarios</a></li>
+                <li><a href="medications.html" class="active">Medicamentos</a></li>
+                <li><a href="suppliers-list.html">Proveedores</a></li>
+                <li><a href="purchase-orders-list.html">Compras</a></li>
+                <li><a href="inventory-transactions-list.html">Inventario</a></li>
+                <li><a href="notifications-list.html">Notificaciones</a></li>
+            </ul>
+            <div class="navbar-user">
+                <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Container -->
+    <div class="container">
+        <a href="medications-list.html" class="back-link">
+            ← Volver a lista de medicamentos
+        </a>
+
+        <div class="form-card">
+            <div class="form-header">
+                <h1 class="form-title">Crear Nuevo Medicamento</h1>
+                <p class="form-subtitle">Complete la información del medicamento para agregarlo al catálogo</p>
+            </div>
+
+            <!-- Alert -->
+            <div id="alert" class="alert"></div>
+
+            <!-- Form -->
+            <form id="medicationForm">
+                <!-- Sección: Información Básica -->
+                <div class="form-section">
+                    <h3 class="section-title">📋 Información Básica</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="code">
+                                Código
+                                <span class="required">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="code" 
+                                name="code" 
+                                placeholder="Ej: MED-001"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="name">
+                                Nombre del Medicamento
+                                <span class="required">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="name" 
+                                name="name" 
+                                placeholder="Ej: Paracetamol"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="form">
+                                Forma Farmacéutica
+                            </label>
+                            <select id="form" name="form">
+                                <option value="">Seleccione una forma</option>
+                                <option value="Tableta">Tableta</option>
+                                <option value="Cápsula">Cápsula</option>
+                                <option value="Jarabe">Jarabe</option>
+                                <option value="Solución">Solución</option>
+                                <option value="Inyectable">Inyectable</option>
+                                <option value="Suspensión">Suspensión</option>
+                                <option value="Crema">Crema</option>
+                                <option value="Ungüento">Ungüento</option>
+                                <option value="Supositorio">Supositorio</option>
+                                <option value="Parche">Parche</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="strength">
+                                Concentración
+                            </label>
+                            <input 
+                                type="text" 
+                                id="strength" 
+                                name="strength" 
+                                placeholder="Ej: 500mg"
+                            >
+                            <small class="help-text">Incluir unidad (mg, g, ml, etc.)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección: Presentación y Precio -->
+                <div class="form-section">
+                    <h3 class="section-title">💰 Presentación y Precio</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="packSize">
+                                Tamaño del Paquete
+                            </label>
+                            <input 
+                                type="number" 
+                                id="packSize" 
+                                name="packSize" 
+                                placeholder="Ej: 20"
+                                min="1"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="uom">
+                                Unidad de Medida
+                            </label>
+                            <select id="uom" name="uom">
+                                <option value="unit">Unidad</option>
+                                <option value="box">Caja</option>
+                                <option value="bottle">Frasco</option>
+                                <option value="vial">Vial</option>
+                                <option value="ampule">Ampolleta</option>
+                                <option value="tube">Tubo</option>
+                                <option value="pack">Paquete</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="unitPrice">
+                                Precio Unitario (MXN)
+                            </label>
+                            <input 
+                                type="number" 
+                                id="unitPrice" 
+                                name="unitPrice" 
+                                placeholder="0.00"
+                                min="0"
+                                step="0.01"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sku">
+                                SKU
+                            </label>
+                            <input 
+                                type="text" 
+                                id="sku" 
+                                name="sku" 
+                                placeholder="Código SKU interno"
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección: Códigos de Identificación -->
+                <div class="form-section">
+                    <h3 class="section-title">🔢 Códigos de Identificación</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="atcCode">
+                                Código ATC
+                            </label>
+                            <input 
+                                type="text" 
+                                id="atcCode" 
+                                name="atcCode" 
+                                placeholder="Ej: N02BE01"
+                            >
+                            <small class="help-text">Código de clasificación ATC</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="barcodes">
+                                Códigos de Barras
+                            </label>
+                            <input 
+                                type="text" 
+                                id="barcodes" 
+                                name="barcodes" 
+                                placeholder="Separados por comas"
+                            >
+                            <small class="help-text">Múltiples códigos separados por comas</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección: Políticas de Inventario -->
+                <div class="form-section">
+                    <h3 class="section-title">📊 Políticas de Inventario</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="reorderPoint">
+                                Punto de Reorden
+                            </label>
+                            <input 
+                                type="number" 
+                                id="reorderPoint" 
+                                name="reorderPoint" 
+                                placeholder="0"
+                                min="0"
+                            >
+                            <small class="help-text">Stock mínimo antes de reordenar</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="safetyStock">
+                                Stock de Seguridad
+                            </label>
+                            <input 
+                                type="number" 
+                                id="safetyStock" 
+                                name="safetyStock" 
+                                placeholder="0"
+                                min="0"
+                            >
+                            <small class="help-text">Stock mínimo requerido</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="avgMonthlyConsumption">
+                                Consumo Mensual Promedio
+                            </label>
+                            <input 
+                                type="number" 
+                                id="avgMonthlyConsumption" 
+                                name="avgMonthlyConsumption" 
+                                placeholder="0"
+                                min="0"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="preferredSupplier">
+                                ID Proveedor Preferido
+                            </label>
+                            <input 
+                                type="text" 
+                                id="preferredSupplier" 
+                                name="preferredSupplier" 
+                                placeholder="ID del proveedor (opcional)"
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección: Almacenamiento -->
+                <div class="form-section">
+                    <h3 class="section-title">🌡️ Condiciones de Almacenamiento</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="storageTemp">
+                                Temperatura de Almacenamiento
+                            </label>
+                            <input 
+                                type="text" 
+                                id="storageTemp" 
+                                name="storageTemp" 
+                                placeholder="Ej: 15-25°C"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="storageConditions">
+                                Condiciones Especiales
+                            </label>
+                            <input 
+                                type="text" 
+                                id="storageConditions" 
+                                name="storageConditions" 
+                                placeholder="Ej: Proteger de la luz"
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección: Configuración -->
+                <div class="form-section">
+                    <h3 class="section-title">⚙️ Configuración</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input 
+                                    type="checkbox" 
+                                    id="isControlled" 
+                                    name="isControlled"
+                                >
+                                <label for="isControlled">
+                                    🔒 Medicamento Controlado
+                                </label>
+                            </div>
+                            <small class="help-text">Requiere control especial y receta</small>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input 
+                                    type="checkbox" 
+                                    id="isActive" 
+                                    name="isActive"
+                                    checked
+                                >
+                                <label for="isActive">
+                                    ✓ Medicamento Activo
+                                </label>
+                            </div>
+                            <small class="help-text">Disponible para uso en el sistema</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="cancelForm()">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmit">
+                        Crear Medicamento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Configuración del API
+        const API_BASE_URL = 'https://backenderp-316e.onrender.com/api';
+        
+        // Elementos del DOM
+        const medicationForm = document.getElementById('medicationForm');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const alertBox = document.getElementById('alert');
+        const btnSubmit = document.getElementById('btnSubmit');
+
+        // Función para verificar autenticación
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (!token || !user) {
+                window.location.href = 'login.html';
+                return null;
+            }
+
+            const loginTime = new Date(localStorage.getItem('loginTime'));
+            const now = new Date();
+            const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+            
+            if (hoursDiff >= 8) {
+                logout();
+                return null;
+            }
+
+            const currentUser = JSON.parse(user);
+            
+            // Verificar permisos
+            if (!currentUser.isSuperUser && currentUser.role !== 'admin' && currentUser.role !== 'manager') {
+                showAlert('No tienes permisos para crear medicamentos', 'error');
+                setTimeout(() => {
+                    window.location.href = 'medications-list.html';
+                }, 2000);
+                return null;
+            }
+
+            return token;
+        }
+
+        // Función para cerrar sesión
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('loginTime');
+            window.location.href = 'login.html';
+        }
+
+        // Función para mostrar alertas
+        function showAlert(message, type = 'error') {
+            alertBox.textContent = message;
+            alertBox.className = `alert alert-${type} show`;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Función para mostrar/ocultar loading
+        function toggleLoading(show) {
+            loadingOverlay.classList.toggle('show', show);
+        }
+
+        // Cancelar formulario
+        function cancelForm() {
+            if (confirm('¿Estás seguro de que deseas cancelar? Se perderán los datos ingresados.')) {
+                window.location.href = 'medications-list.html';
+            }
+        }
+
+        // Manejar envío del formulario
+        medicationForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const token = checkAuth();
+            if (!token) return;
+
+            // Construir objeto de datos
+            const formData = {
+                code: document.getElementById('code').value.trim(),
+                name: document.getElementById('name').value.trim(),
+                form: document.getElementById('form').value || undefined,
+                strength: document.getElementById('strength').value.trim() || undefined,
+                uom: document.getElementById('uom').value || 'unit',
+                packSize: document.getElementById('packSize').value ? Number(document.getElementById('packSize').value) : undefined,
+                unitPrice: document.getElementById('unitPrice').value ? Number(document.getElementById('unitPrice').value) : undefined,
+                sku: document.getElementById('sku').value.trim() || undefined,
+                atcCode: document.getElementById('atcCode').value.trim() || undefined,
+                isControlled: document.getElementById('isControlled').checked,
+                isActive: document.getElementById('isActive').checked
+            };
+
+            // Códigos de barras (array)
+            const barcodesInput = document.getElementById('barcodes').value.trim();
+            if (barcodesInput) {
+                formData.barcodes = barcodesInput.split(',').map(b => b.trim()).filter(b => b);
+            }
+
+            // Políticas de inventario
+            const reorderPoint = document.getElementById('reorderPoint').value;
+            const safetyStock = document.getElementById('safetyStock').value;
+            const avgMonthly = document.getElementById('avgMonthlyConsumption').value;
+            const preferredSupplier = document.getElementById('preferredSupplier').value.trim();
+
+            if (reorderPoint || safetyStock || avgMonthly) {
+                formData.policy = {};
+                if (reorderPoint) formData.policy.reorderPoint = Number(reorderPoint);
+                if (safetyStock) formData.policy.safetyStock = Number(safetyStock);
+                if (avgMonthly) formData.policy.avgMonthlyConsumption = Number(avgMonthly);
+            }
+
+            if (preferredSupplier) {
+                formData.preferredSupplier = preferredSupplier;
+            }
+
+            // Almacenamiento
+            const storageTemp = document.getElementById('storageTemp').value.trim();
+            const storageConditions = document.getElementById('storageConditions').value.trim();
+
+            if (storageTemp || storageConditions) {
+                formData.storage = {};
+                if (storageTemp) formData.storage.temperature = storageTemp;
+                if (storageConditions) formData.storage.conditions = storageConditions;
+            }
+
+            // Validaciones
+            if (!formData.code || !formData.name) {
+                showAlert('Código y Nombre son campos requeridos', 'error');
+                return;
+            }
+
+            // Deshabilitar botón y mostrar loading
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = 'Creando...';
+            toggleLoading(true);
+            alertBox.classList.remove('show');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/medications`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.ok) {
+                    showAlert('Medicamento creado exitosamente', 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'medications-list.html?created=true';
+                    }, 1500);
+
+                } else {
+                    const errorMessage = data.message || 'Error al crear medicamento';
+                    showAlert(errorMessage, 'error');
+                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = 'Crear Medicamento';
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error de conexión. Verifica tu internet e intenta nuevamente.', 'error');
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = 'Crear Medicamento';
+            } finally {
+                toggleLoading(false);
+            }
+        });
+
+        // Limpiar alertas al escribir
+        document.querySelectorAll('input, select, textarea').forEach(input => {
+            input.addEventListener('input', () => {
+                alertBox.classList.remove('show');
+            });
+        });
+
+        // Inicializar
+        (function init() {
+            checkAuth();
+            document.getElementById('code').focus();
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle de Medicamento - Sistema Hospitalario</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .navbar-brand {
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            padding: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-menu {
+            display: flex;
+            list-style: none;
+            gap: 5px;
+        }
+
+        .navbar-menu li a {
+            color: white;
+            text-decoration: none;
+            padding: 20px 18px;
+            display: block;
+            transition: background 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .navbar-menu li a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-menu li a.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-bottom: 3px solid white;
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: white;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* Back button */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            transition: gap 0.3s ease;
+        }
+
+        .back-link:hover {
+            gap: 12px;
+        }
+
+        /* Alert */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-error {
+            background-color: #fee;
+            color: #c33;
+            border-left: 4px solid #c33;
+        }
+
+        /* Detail Card */
+        .detail-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .detail-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            color: white;
+        }
+
+        .detail-title {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .detail-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .detail-badges {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .badge-controlled {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-active {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .badge-inactive {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .detail-body {
+            padding: 30px;
+        }
+
+        .detail-section {
+            margin-bottom: 30px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .detail-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 15px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .info-value.empty {
+            color: #999;
+            font-style: italic;
+        }
+
+        .price-value {
+            font-size: 24px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .barcode-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .barcode-item {
+            background: #f5f5f5;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        /* Actions */
+        .detail-actions {
+            display: flex;
+            gap: 15px;
+            padding: 25px 30px;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        /* Loading */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Search Box */
+        .search-box {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 25px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-search {
+            margin-top: 10px;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar-menu {
+                display: none;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .detail-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">
+                🏥 Sistema Hospitalario
+            </div>
+            <ul class="navbar-menu">
+                <li><a href="users-list.html">Usuarios</a></li>
+                <li><a href="medications.html" class="active">Medicamentos</a></li>
+                <li><a href="suppliers-list.html">Proveedores</a></li>
+                <li><a href="purchase-orders-list.html">Compras</a></li>
+                <li><a href="inventory-transactions-list.html">Inventario</a></li>
+                <li><a href="notifications-list.html">Notificaciones</a></li>
+            </ul>
+            <div class="navbar-user">
+                <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Container -->
+    <div class="container">
+        <a href="medications-list.html" class="back-link">
+            ← Volver a lista de medicamentos
+        </a>
+
+        <!-- Alert -->
+        <div id="alert" class="alert"></div>
+
+        <!-- Search Box (si no hay ID en URL) -->
+        <div class="search-box" id="searchBox" style="display: none;">
+            <h3 style="margin-bottom: 15px; color: #333;">Buscar Medicamento por ID</h3>
+            <input 
+                type="text" 
+                class="search-input" 
+                id="medicationIdInput"
+                placeholder="Ingresa el ID del medicamento..."
+            >
+            <button class="btn btn-primary btn-search" onclick="searchMedication()">
+                🔍 Buscar
+            </button>
+            <p class="help-text">
+                Puedes obtener el ID desde la lista de medicamentos o desde una URL compartida
+            </p>
+        </div>
+
+        <!-- Detail Card -->
+        <div class="detail-card" id="detailCard" style="display: none;">
+            <div class="detail-header">
+                <div class="detail-title" id="medName">-</div>
+                <div class="detail-subtitle" id="medCode">-</div>
+                <div class="detail-badges" id="medBadges"></div>
+            </div>
+
+            <div class="detail-body">
+                <!-- Información Básica -->
+                <div class="detail-section">
+                    <h3 class="section-title">📋 Información Básica</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Forma Farmacéutica</div>
+                            <div class="info-value" id="medForm">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Concentración</div>
+                            <div class="info-value" id="medStrength">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Presentación</div>
+                            <div class="info-value" id="medPack">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Unidad de Medida</div>
+                            <div class="info-value" id="medUom">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Precio -->
+                <div class="detail-section">
+                    <h3 class="section-title">💰 Información Comercial</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Precio Unitario</div>
+                            <div class="price-value" id="medPrice">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">SKU</div>
+                            <div class="info-value" id="medSku">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Códigos de Identificación -->
+                <div class="detail-section" id="codesSection" style="display: none;">
+                    <h3 class="section-title">🔢 Códigos de Identificación</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Código ATC</div>
+                            <div class="info-value" id="medAtc">-</div>
+                        </div>
+                        <div class="info-item full-width" id="barcodesItem" style="display: none;">
+                            <div class="info-label">Códigos de Barras</div>
+                            <div class="barcode-list" id="medBarcodes"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Políticas de Inventario -->
+                <div class="detail-section" id="policySection" style="display: none;">
+                    <h3 class="section-title">📊 Políticas de Inventario</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Punto de Reorden</div>
+                            <div class="info-value" id="medReorder">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Stock de Seguridad</div>
+                            <div class="info-value" id="medSafety">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Consumo Mensual Promedio</div>
+                            <div class="info-value" id="medConsumption">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Proveedor Preferido</div>
+                            <div class="info-value" id="medSupplier">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Almacenamiento -->
+                <div class="detail-section" id="storageSection" style="display: none;">
+                    <h3 class="section-title">🌡️ Condiciones de Almacenamiento</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Temperatura</div>
+                            <div class="info-value" id="medTemp">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Condiciones Especiales</div>
+                            <div class="info-value" id="medConditions">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información del Sistema -->
+                <div class="detail-section">
+                    <h3 class="section-title">ℹ️ Información del Sistema</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">ID del Medicamento</div>
+                            <div class="info-value" id="medId" style="font-family: monospace;">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Fecha de Creación</div>
+                            <div class="info-value" id="medCreated">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-actions">
+                <a href="medication-stock.html" class="btn btn-primary" id="btnStock">
+                    📦 Ajustar Inventario
+                </a>
+                <a href="medications-list.html" class="btn btn-secondary">
+                    📋 Ver Todos
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración del API
+        const API_BASE_URL = 'https://backenderp-316e.onrender.com/api';
+        
+        let currentUser = null;
+        let medicationId = null;
+
+        // Elementos del DOM
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const alertBox = document.getElementById('alert');
+        const searchBox = document.getElementById('searchBox');
+        const detailCard = document.getElementById('detailCard');
+        const medicationIdInput = document.getElementById('medicationIdInput');
+        const btnStock = document.getElementById('btnStock');
+
+        // Función para verificar autenticación
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (!token || !user) {
+                window.location.href = 'login.html';
+                return null;
+            }
+
+            const loginTime = new Date(localStorage.getItem('loginTime'));
+            const now = new Date();
+            const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+            
+            if (hoursDiff >= 8) {
+                logout();
+                return null;
+            }
+
+            currentUser = JSON.parse(user);
+            return token;
+        }
+
+        // Función para cerrar sesión
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('loginTime');
+            window.location.href = 'login.html';
+        }
+
+        // Función para mostrar alertas
+        function showAlert(message, type = 'error') {
+            alertBox.textContent = message;
+            alertBox.className = `alert alert-${type} show`;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Función para mostrar/ocultar loading
+        function toggleLoading(show) {
+            loadingOverlay.classList.toggle('show', show);
+        }
+
+        // Función para formatear fecha
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-MX', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Función para formatear precio
+        function formatPrice(price) {
+            if (!price && price !== 0) return 'N/A';
+            return `$${Number(price).toFixed(2)} MXN`;
+        }
+
+        // Función para cargar medicamento
+        async function loadMedication(id) {
+            const token = checkAuth();
+            if (!token) return;
+
+            toggleLoading(true);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/medications/${id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.ok) {
+                    displayMedication(data.data);
+                } else {
+                    showAlert(data.message || 'Error al cargar el medicamento', 'error');
+                    searchBox.style.display = 'block';
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error de conexión al cargar el medicamento', 'error');
+                searchBox.style.display = 'block';
+            } finally {
+                toggleLoading(false);
+            }
+        }
+
+        // Función para mostrar medicamento
+        function displayMedication(med) {
+            searchBox.style.display = 'none';
+            detailCard.style.display = 'block';
+
+            // Header
+            document.getElementById('medName').textContent = med.name || 'Sin nombre';
+            document.getElementById('medCode').textContent = `Código: ${med.code || 'N/A'}`;
+
+            // Badges
+            const badgesHtml = [];
+            if (med.isActive !== false) {
+                badgesHtml.push('<span class="badge badge-active">✓ Activo</span>');
+            } else {
+                badgesHtml.push('<span class="badge badge-inactive">✗ Inactivo</span>');
+            }
+            if (med.isControlled) {
+                badgesHtml.push('<span class="badge badge-controlled">🔒 Controlado</span>');
+            }
+            document.getElementById('medBadges').innerHTML = badgesHtml.join('');
+
+            // Información básica
+            document.getElementById('medForm').textContent = med.form || 'N/A';
+            document.getElementById('medStrength').textContent = med.strength || 'N/A';
+            document.getElementById('medPack').textContent = med.packSize ? `${med.packSize} unidades` : 'N/A';
+            document.getElementById('medUom').textContent = med.uom || 'unit';
+
+            // Precio
+            document.getElementById('medPrice').textContent = formatPrice(med.unitPrice);
+            document.getElementById('medSku').textContent = med.sku || 'N/A';
+
+            // Códigos
+            if (med.atcCode || (med.barcodes && med.barcodes.length > 0)) {
+                document.getElementById('codesSection').style.display = 'block';
+                document.getElementById('medAtc').textContent = med.atcCode || 'N/A';
+                
+                if (med.barcodes && med.barcodes.length > 0) {
+                    document.getElementById('barcodesItem').style.display = 'block';
+                    const barcodesHtml = med.barcodes.map(bc => 
+                        `<span class="barcode-item">${bc}</span>`
+                    ).join('');
+                    document.getElementById('medBarcodes').innerHTML = barcodesHtml;
+                }
+            }
+
+            // Políticas
+            if (med.policy || med.preferredSupplier) {
+                document.getElementById('policySection').style.display = 'block';
+                document.getElementById('medReorder').textContent = med.policy?.reorderPoint || 'No definido';
+                document.getElementById('medSafety').textContent = med.policy?.safetyStock || 'No definido';
+                document.getElementById('medConsumption').textContent = med.policy?.avgMonthlyConsumption || 'No definido';
+                document.getElementById('medSupplier').textContent = med.preferredSupplier || 'No asignado';
+            }
+
+            // Almacenamiento
+            if (med.storage) {
+                document.getElementById('storageSection').style.display = 'block';
+                document.getElementById('medTemp').textContent = med.storage.temperature || 'No especificado';
+                document.getElementById('medConditions').textContent = med.storage.conditions || 'No especificadas';
+            }
+
+            // Información del sistema
+            document.getElementById('medId').textContent = med._id;
+            document.getElementById('medCreated').textContent = formatDate(med.createdAt);
+
+            // Actualizar link de stock
+            btnStock.href = `medication-stock.html?id=${med._id}`;
+
+            // Verificar permisos para ajustar stock
+            const hasPermission = currentUser.isSuperUser || 
+                                 currentUser.role === 'admin' || 
+                                 currentUser.role === 'manager';
+            if (!hasPermission) {
+                btnStock.style.display = 'none';
+            }
+        }
+
+        // Función de búsqueda
+        function searchMedication() {
+            const id = medicationIdInput.value.trim();
+            if (!id) {
+                showAlert('Por favor ingresa un ID de medicamento', 'error');
+                return;
+            }
+
+            // Actualizar URL y cargar
+            const url = new URL(window.location);
+            url.searchParams.set('id', id);
+            window.history.pushState({}, '', url);
+            
+            loadMedication(id);
+        }
+
+        // Enter en campo de búsqueda
+        medicationIdInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchMedication();
+            }
+        });
+
+        // Inicializar
+        (function init() {
+            const token = checkAuth();
+            if (!token) return;
+
+            // Obtener ID de la URL
+            const urlParams = new URLSearchParams(window.location.search);
+            medicationId = urlParams.get('id');
+
+            if (medicationId) {
+                loadMedication(medicationId);
+            } else {
+                searchBox.style.display = 'block';
+                medicationIdInput.focus();
+            }
+        })();
+    </script>
+</body>
+</html>

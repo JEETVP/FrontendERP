@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema de Inventario Hospitalario</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .login-header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .login-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .login-body {
+            padding: 40px 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #aaa;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-error {
+            background-color: #fee;
+            color: #c33;
+            border-left: 4px solid #c33;
+        }
+
+        .alert-success {
+            background-color: #efe;
+            color: #3c3;
+            border-left: 4px solid #3c3;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .password-toggle {
+            position: relative;
+        }
+
+        .password-toggle input {
+            padding-right: 45px;
+        }
+
+        .toggle-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #999;
+            user-select: none;
+            font-size: 18px;
+        }
+
+        .toggle-icon:hover {
+            color: #667eea;
+        }
+
+        .login-footer {
+            text-align: center;
+            padding: 20px 30px 30px;
+            color: #666;
+            font-size: 13px;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                border-radius: 0;
+            }
+            
+            .login-header {
+                padding: 30px 20px;
+            }
+            
+            .login-body {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>🏥 Sistema Hospitalario</h1>
+            <p>Gestión de Inventario y Medicamentos</p>
+        </div>
+        
+        <div class="login-body">
+            <div id="alert" class="alert"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Correo Electrónico</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        placeholder="usuario@hospital.com"
+                        required
+                        autocomplete="email"
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <div class="password-toggle">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            placeholder="••••••••"
+                            required
+                            autocomplete="current-password"
+                        >
+                        <span class="toggle-icon" id="togglePassword">👁️</span>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-login" id="btnLogin">
+                    Iniciar Sesión
+                </button>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                </div>
+            </form>
+        </div>
+        
+        <div class="login-footer">
+            <p>&copy; 2025 Sistema de Inventario Hospitalario</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuración del API
+        const API_BASE_URL = 'https://backenderp-316e.onrender.com/api';
+        
+        // Elementos del DOM
+        const loginForm = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const btnLogin = document.getElementById('btnLogin');
+        const alertBox = document.getElementById('alert');
+        const loading = document.getElementById('loading');
+        const togglePassword = document.getElementById('togglePassword');
+
+        // Mostrar/ocultar contraseña
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.type === 'password' ? 'text' : 'password';
+            passwordInput.type = type;
+            togglePassword.textContent = type === 'password' ? '👁️' : '🙈';
+        });
+
+        // Función para mostrar alertas
+        function showAlert(message, type = 'error') {
+            alertBox.textContent = message;
+            alertBox.className = `alert alert-${type} show`;
+            
+            setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, 5000);
+        }
+
+        // Función para guardar token y datos de usuario
+        function saveAuthData(token, user) {
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem('loginTime', new Date().toISOString());
+        }
+
+        // Función para verificar si ya hay sesión activa
+        function checkExistingSession() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (token && user) {
+                // Verificar si el token no ha expirado (8 horas)
+                const loginTime = new Date(localStorage.getItem('loginTime'));
+                const now = new Date();
+                const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+                
+                if (hoursDiff < 8) {
+                    // Redirigir al dashboard
+                    window.location.href = 'dashboard.html';
+                } else {
+                    // Token expirado, limpiar
+                    clearAuthData();
+                }
+            }
+        }
+
+        // Función para limpiar datos de autenticación
+        function clearAuthData() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('loginTime');
+        }
+
+        // Manejar el envío del formulario
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            
+            // Validaciones básicas
+            if (!email || !password) {
+                showAlert('Por favor, completa todos los campos', 'error');
+                return;
+            }
+            
+            // Deshabilitar botón y mostrar loading
+            btnLogin.disabled = true;
+            btnLogin.textContent = 'Iniciando sesión...';
+            loading.classList.add('show');
+            alertBox.classList.remove('show');
+            
+            try {
+                // Realizar petición de login
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.ok) {
+                    // Login exitoso
+                    const { token, user } = data.data;
+                    
+                    // Guardar datos de autenticación
+                    saveAuthData(token, user);
+                    
+                    // Mostrar mensaje de éxito
+                    showAlert('¡Inicio de sesión exitoso! Redirigiendo...', 'success');
+                    
+                    // Redirigir al dashboard después de 1 segundo
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                    
+                } else {
+                    // Error en el login
+                    const errorMessage = data.message || 'Error al iniciar sesión';
+                    
+                    if (response.status === 403) {
+                        showAlert('Tu cuenta está bloqueada. Contacta al administrador.', 'error');
+                    } else if (response.status === 400) {
+                        showAlert('Credenciales inválidas. Verifica tu correo y contraseña.', 'error');
+                    } else {
+                        showAlert(errorMessage, 'error');
+                    }
+                    
+                    // Limpiar contraseña
+                    passwordInput.value = '';
+                }
+                
+            } catch (error) {
+                console.error('Error en login:', error);
+                showAlert('Error de conexión. Verifica tu internet e intenta nuevamente.', 'error');
+            } finally {
+                // Rehabilitar botón y ocultar loading
+                btnLogin.disabled = false;
+                btnLogin.textContent = 'Iniciar Sesión';
+                loading.classList.remove('show');
+            }
+        });
+
+        // Verificar sesión existente al cargar la página
+        checkExistingSession();
+
+        // Limpiar mensajes de error al escribir
+        emailInput.addEventListener('input', () => {
+            alertBox.classList.remove('show');
+        });
+
+        passwordInput.addEventListener('input', () => {
+            alertBox.classList.remove('show');
+        });
+
+        // Focus automático en el campo de email
+        emailInput.focus();
+    </script>
+</body>
+</html>

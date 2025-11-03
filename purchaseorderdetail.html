@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle de Orden - Sistema Hospitalario</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; min-height: 100vh; }
+        
+        .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .navbar-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
+        .navbar-brand { color: white; font-size: 20px; font-weight: 600; padding: 15px 0; }
+        .btn-logout { background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+        
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: #667eea; text-decoration: none; margin-bottom: 20px; }
+        
+        .detail-card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
+        .detail-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; color: white; }
+        .detail-title { font-size: 32px; font-weight: 600; margin-bottom: 10px; }
+        .detail-subtitle { font-size: 16px; opacity: 0.9; }
+        .badge { display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .badge-draft { background: rgba(255,255,255,0.2); }
+        .badge-sent { background: rgba(255,255,255,0.2); }
+        .badge-received { background: rgba(255,255,255,0.2); }
+        
+        .detail-body { padding: 30px; }
+        .detail-section { margin-bottom: 30px; padding-bottom: 25px; border-bottom: 1px solid #e0e0e0; }
+        .section-title { font-size: 18px; font-weight: 600; color: #333; margin-bottom: 20px; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .info-item { display: flex; flex-direction: column; }
+        .info-label { font-size: 12px; color: #999; margin-bottom: 5px; }
+        .info-value { font-size: 15px; color: #333; font-weight: 500; }
+        
+        .lines-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .lines-table th { background: #f8f9fa; padding: 12px; text-align: left; font-size: 12px; color: #666; }
+        .lines-table td { padding: 12px; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+        .progress-bar { background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+        .progress-fill { background: #4caf50; height: 100%; transition: width 0.3s; }
+        
+        .detail-actions { display: flex; gap: 15px; padding: 25px 30px; background: #f8f9fa; border-top: 1px solid #e0e0e0; }
+        .btn { padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-secondary { background: #f5f5f5; color: #666; }
+        
+        .search-box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .search-input { width: 100%; padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px; margin-bottom: 15px; }
+        
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); z-index: 1000; justify-content: center; align-items: center; }
+        .loading-overlay.show { display: flex; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">🏥 Sistema Hospitalario</div>
+            <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </nav>
+
+    <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
+
+    <div class="container">
+        <a href="purchase-orders-list.html" class="back-link">← Volver a lista</a>
+
+        <div class="search-box" id="searchBox" style="display: none;">
+            <h3 style="margin-bottom: 15px;">Buscar Orden por ID</h3>
+            <input type="text" class="search-input" id="poIdInput" placeholder="Ingresa el ID de la orden...">
+            <button class="btn btn-primary" onclick="searchPO()">🔍 Buscar</button>
+        </div>
+
+        <div class="detail-card" id="detailCard" style="display: none;">
+            <div class="detail-header">
+                <div class="detail-title" id="poCode">-</div>
+                <div class="detail-subtitle" id="poSubtitle">-</div>
+                <div style="margin-top: 15px;" id="poBadge"></div>
+            </div>
+
+            <div class="detail-body">
+                <div class="detail-section">
+                    <h3 class="section-title">📋 Información General</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Hospital</div>
+                            <div class="info-value" id="poHospital">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Proveedor</div>
+                            <div class="info-value" id="poSupplier">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Estado</div>
+                            <div class="info-value" id="poStatus">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Moneda</div>
+                            <div class="info-value" id="poCurrency">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3 class="section-title">💰 Totales</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Subtotal</div>
+                            <div class="info-value" id="poSubtotal">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Impuestos</div>
+                            <div class="info-value" id="poTax">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Total</div>
+                            <div class="info-value" id="poTotal" style="font-size: 20px; color: #667eea;">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3 class="section-title">📦 Líneas de Productos</h3>
+                    <table class="lines-table">
+                        <thead>
+                            <tr>
+                                <th>Medicamento</th>
+                                <th>Cantidad</th>
+                                <th>Precio</th>
+                                <th>Subtotal</th>
+                                <th>Recibido</th>
+                                <th>Progreso</th>
+                            </tr>
+                        </thead>
+                        <tbody id="linesTableBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="detail-section" style="border: none; padding-bottom: 0;">
+                    <h3 class="section-title">ℹ️ Información Adicional</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">ID de la Orden</div>
+                            <div class="info-value" id="poId" style="font-family: monospace;">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Fecha de Creación</div>
+                            <div class="info-value" id="poCreated">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-actions">
+                <button class="btn btn-success" id="btnSend" style="display:none;" onclick="sendPO()">📤 Enviar Orden</button>
+                <a href="#" class="btn btn-primary" id="btnReceive" style="display:none;">📥 Recibir Productos</a>
+                <a href="purchase-orders-list.html" class="btn btn-secondary">📋 Ver Todas</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://backenderp-316e.onrender.com/api';
+        let currentPO = null;
+
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.href = 'login.html'; return null; }
+            return token;
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        function formatPrice(price) {
+            return `$${Number(price || 0).toFixed(2)}`;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            return new Date(dateString).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        async function loadPO(id) {
+            const token = checkAuth();
+            if (!token) return;
+
+            document.getElementById('loadingOverlay').classList.add('show');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/purchase-orders/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.ok) {
+                    displayPO(data.data);
+                } else {
+                    alert('Orden no encontrada');
+                    document.getElementById('searchBox').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            } finally {
+                document.getElementById('loadingOverlay').classList.remove('show');
+            }
+        }
+
+        function displayPO(po) {
+            currentPO = po;
+            document.getElementById('searchBox').style.display = 'none';
+            document.getElementById('detailCard').style.display = 'block';
+
+            document.getElementById('poCode').textContent = po.code || 'N/A';
+            document.getElementById('poSubtitle').textContent = `Orden de Compra`;
+            
+            const badges = {
+                DRAFT: '<span class="badge badge-draft">Borrador</span>',
+                SENT: '<span class="badge badge-sent">Enviada</span>',
+                RECEIVED: '<span class="badge badge-received">Recibida</span>'
+            };
+            document.getElementById('poBadge').innerHTML = badges[po.status] || po.status;
+
+            document.getElementById('poHospital').textContent = po.hospital?.name || po.hospital || 'N/A';
+            document.getElementById('poSupplier').textContent = po.supplier?.name || po.supplier || 'N/A';
+            document.getElementById('poStatus').textContent = po.status || 'N/A';
+            document.getElementById('poCurrency').textContent = po.currency || 'MXN';
+
+            document.getElementById('poSubtotal').textContent = formatPrice(po.subtotal);
+            document.getElementById('poTax').textContent = formatPrice(po.taxAmount);
+            document.getElementById('poTotal').textContent = `${formatPrice(po.total)} ${po.currency || 'MXN'}`;
+
+            const tbody = document.getElementById('linesTableBody');
+            tbody.innerHTML = '';
+            (po.lines || []).forEach(line => {
+                const received = line.received || 0;
+                const ordered = line.qty || 0;
+                const progress = ordered > 0 ? (received / ordered) * 100 : 0;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${line.description || line.medication || 'N/A'}</td>
+                    <td>${ordered} ${line.uom || 'unit'}</td>
+                    <td>${formatPrice(line.unitPrice)}</td>
+                    <td>${formatPrice(line.subtotal)}</td>
+                    <td><strong>${received} / ${ordered}</strong></td>
+                    <td>
+                        <div style="min-width: 100px;">
+                            <div style="font-size: 12px; color: #666;">${progress.toFixed(0)}%</div>
+                            <div class="progress-bar"><div class="progress-fill" style="width: ${progress}%;"></div></div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('poId').textContent = po._id;
+            document.getElementById('poCreated').textContent = formatDate(po.createdAt);
+
+            // Botones de acción
+            const user = JSON.parse(localStorage.getItem('user'));
+            const hasPermission = user?.isSuperUser || user?.role === 'admin' || user?.role === 'manager';
+            
+            if (hasPermission && po.status === 'DRAFT') {
+                document.getElementById('btnSend').style.display = 'inline-flex';
+            }
+            
+            if (hasPermission && (po.status === 'SENT' || po.status === 'RECEIVED')) {
+                const btnReceive = document.getElementById('btnReceive');
+                btnReceive.style.display = 'inline-flex';
+                btnReceive.href = `purchase-order-receive.html?id=${po._id}`;
+            }
+        }
+
+        async function sendPO() {
+            if (!confirm('¿Enviar esta orden al proveedor?')) return;
+            
+            const token = checkAuth();
+            document.getElementById('loadingOverlay').classList.add('show');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/purchase-orders/${currentPO._id}/send`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.ok) {
+                    alert('Orden enviada exitosamente');
+                    loadPO(currentPO._id);
+                } else {
+                    alert(data.message || 'Error al enviar');
+                }
+            } catch (error) {
+                alert('Error de conexión');
+            } finally {
+                document.getElementById('loadingOverlay').classList.remove('show');
+            }
+        }
+
+        function searchPO() {
+            const id = document.getElementById('poIdInput').value.trim();
+            if (id) loadPO(id);
+        }
+
+        // Inicializar
+        (function init() {
+            const token = checkAuth();
+            if (!token) return;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const poId = urlParams.get('id');
+
+            if (poId) {
+                loadPO(poId);
+            } else {
+                document.getElementById('searchBox').style.display = 'block';
+            }
+        })();
+    </script>
+</body>
+</html>

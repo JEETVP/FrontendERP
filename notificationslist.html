@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notificaciones - Sistema Hospitalario</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; min-height: 100vh; }
+        
+        .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        .navbar-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
+        .navbar-brand { color: white; font-size: 20px; font-weight: 600; padding: 15px 0; }
+        .navbar-menu { display: flex; list-style: none; gap: 5px; }
+        .navbar-menu li a { color: white; text-decoration: none; padding: 20px 18px; display: block; transition: background 0.3s; font-size: 14px; font-weight: 500; }
+        .navbar-menu li a:hover { background: rgba(255,255,255,0.1); }
+        .navbar-menu li a.active { background: rgba(255,255,255,0.2); border-bottom: 3px solid white; }
+        .navbar-user { display: flex; align-items: center; gap: 15px; color: white; }
+        .btn-logout { background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+        
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .page-header { background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 25px; }
+        .page-title { font-size: 28px; color: #333; font-weight: 600; margin-bottom: 10px; }
+        .page-subtitle { color: #666; font-size: 14px; }
+        
+        .filters { background: white; padding: 20px 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 25px; }
+        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .filter-group { display: flex; flex-direction: column; }
+        .filter-group label { font-size: 12px; color: #666; margin-bottom: 5px; font-weight: 500; }
+        .filter-group select { padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
+        .btn-filter { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .btn-mark-all { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-left: 10px; }
+        
+        .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-align: center; }
+        .stat-value { font-size: 28px; font-weight: 700; color: #667eea; margin-bottom: 5px; }
+        .stat-label { font-size: 12px; color: #666; text-transform: uppercase; }
+        
+        .notifications-container { display: flex; flex-direction: column; gap: 15px; }
+        .notification-card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 20px; transition: all 0.3s; cursor: pointer; border-left: 4px solid transparent; }
+        .notification-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); transform: translateY(-2px); }
+        .notification-card.unread { background: #f8f9ff; border-left-color: #667eea; }
+        .notification-card.read { opacity: 0.7; }
+        
+        .notification-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; }
+        .notification-title { font-size: 16px; font-weight: 600; color: #333; display: flex; align-items: center; gap: 10px; }
+        .notification-icon { font-size: 20px; }
+        .notification-date { font-size: 12px; color: #999; }
+        .notification-message { color: #666; font-size: 14px; line-height: 1.5; margin-bottom: 12px; }
+        .notification-footer { display: flex; justify-content: space-between; align-items: center; }
+        .notification-meta { display: flex; gap: 10px; flex-wrap: wrap; }
+        
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .badge-low { background: #e3f2fd; color: #1976d2; }
+        .badge-medium { background: #fff3cd; color: #856404; }
+        .badge-high { background: #ffe0b2; color: #e65100; }
+        .badge-critical { background: #ffebee; color: #c62828; }
+        .badge-type { background: #f5f5f5; color: #666; }
+        .badge-read { background: #e8f5e9; color: #2e7d32; }
+        .badge-unread { background: #e3f2fd; color: #1976d2; }
+        
+        .type-icon { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+        .type-LOW_STOCK { background: #ff9800; }
+        .type-EXPIRY_SOON { background: #f44336; }
+        .type-ORDER_STATUS { background: #2196f3; }
+        .type-SYSTEM { background: #9e9e9e; }
+        
+        .btn-mark-read { background: transparent; border: 1px solid #e0e0e0; color: #666; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.3s; }
+        .btn-mark-read:hover { background: #667eea; color: white; border-color: #667eea; }
+        
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); z-index: 1000; justify-content: center; align-items: center; }
+        .loading-overlay.show { display: flex; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .empty-state { text-align: center; padding: 80px 20px; color: #999; background: white; border-radius: 12px; }
+        .empty-state-icon { font-size: 64px; margin-bottom: 20px; }
+        
+        .pagination { display: flex; justify-content: center; gap: 10px; padding: 20px; }
+        .page-btn { padding: 8px 16px; border: 1px solid #e0e0e0; background: white; border-radius: 6px; cursor: pointer; }
+        .page-btn.active { background: #667eea; color: white; border-color: #667eea; }
+        
+        @media (max-width: 768px) {
+            .navbar-menu { display: none; }
+            .filter-grid { grid-template-columns: 1fr; }
+            .notification-header { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">🏥 Sistema Hospitalario</div>
+            <ul class="navbar-menu">
+                <li><a href="users-list.html">Usuarios</a></li>
+                <li><a href="medications.html">Medicamentos</a></li>
+                <li><a href="suppliers.html">Proveedores</a></li>
+                <li><a href="purchase-orders.html">Compras</a></li>
+                <li><a href="inventory-transactions-list.html">Inventario</a></li>
+                <li><a href="notifications-list.html" class="active">Notificaciones</a></li>
+            </ul>
+            <div class="navbar-user">
+                <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
+
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">🔔 Notificaciones</h1>
+            <p class="page-subtitle">Centro de notificaciones del sistema</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-box">
+                <div class="stat-value" id="totalNotif">-</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="unreadNotif" style="color: #667eea;">-</div>
+                <div class="stat-label">No Leídas</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="highPriorityNotif" style="color: #ff9800;">-</div>
+                <div class="stat-label">Alta Prioridad</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="todayNotif" style="color: #4caf50;">-</div>
+                <div class="stat-label">Hoy</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label>Tipo</label>
+                    <select id="filterType">
+                        <option value="">Todos</option>
+                        <option value="LOW_STOCK">Stock Bajo</option>
+                        <option value="EXPIRY_SOON">Próximo a Vencer</option>
+                        <option value="ORDER_STATUS">Estado de Orden</option>
+                        <option value="SYSTEM">Sistema</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Prioridad</label>
+                    <select id="filterPriority">
+                        <option value="">Todas</option>
+                        <option value="low">Baja</option>
+                        <option value="medium">Media</option>
+                        <option value="high">Alta</option>
+                        <option value="critical">Crítica</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Estado</label>
+                    <select id="filterRead">
+                        <option value="">Todas</option>
+                        <option value="false">No Leídas</option>
+                        <option value="true">Leídas</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn-filter" onclick="applyFilters()">🔍 Filtrar</button>
+            <button class="btn-mark-all" onclick="markAllRead()">✓ Marcar Todas como Leídas</button>
+        </div>
+
+        <div class="notifications-container" id="notificationsContainer"></div>
+
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">🔔</div>
+            <div style="font-size: 20px; color: #666; margin-bottom: 10px;">No hay notificaciones</div>
+            <div style="font-size: 14px;">Todas las notificaciones aparecerán aquí</div>
+        </div>
+
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://backenderp-316e.onrender.com/api';
+        let currentPage = 1;
+        let currentFilters = {};
+        let allNotifications = [];
+
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.href = 'login.html'; return null; }
+            return token;
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'Hace un momento';
+            if (diffMins < 60) return `Hace ${diffMins} min`;
+            if (diffHours < 24) return `Hace ${diffHours}h`;
+            if (diffDays < 7) return `Hace ${diffDays}d`;
+            return date.toLocaleDateString('es-MX', { month: 'short', day: 'numeric' });
+        }
+
+        function getTypeIcon(type) {
+            const icons = {
+                LOW_STOCK: '📦',
+                EXPIRY_SOON: '⏰',
+                ORDER_STATUS: '📋',
+                SYSTEM: '⚙️'
+            };
+            return icons[type] || '🔔';
+        }
+
+        function getPriorityBadge(priority) {
+            const badges = {
+                low: '<span class="badge badge-low">Baja</span>',
+                medium: '<span class="badge badge-medium">Media</span>',
+                high: '<span class="badge badge-high">Alta</span>',
+                critical: '<span class="badge badge-critical">Crítica</span>'
+            };
+            return badges[priority] || '';
+        }
+
+        async function loadNotifications(page = 1) {
+            const token = checkAuth();
+            if (!token) return;
+
+            document.getElementById('loadingOverlay').classList.add('show');
+
+            try {
+                const params = new URLSearchParams({
+                    page,
+                    limit: 20,
+                    sort: '-createdAt',
+                    ...currentFilters
+                });
+
+                const response = await fetch(`${API_BASE_URL}/notifications?${params}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.ok) {
+                    allNotifications = data.data;
+                    renderNotifications(data.data);
+                    renderPagination(data.meta);
+                    updateStats();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            } finally {
+                document.getElementById('loadingOverlay').classList.remove('show');
+            }
+        }
+
+        function renderNotifications(notifications) {
+            const container = document.getElementById('notificationsContainer');
+            const emptyState = document.getElementById('emptyState');
+
+            container.innerHTML = '';
+
+            if (!notifications || notifications.length === 0) {
+                container.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            container.style.display = 'flex';
+            emptyState.style.display = 'none';
+
+            notifications.forEach(notif => {
+                const card = document.createElement('div');
+                card.className = `notification-card ${notif.read ? 'read' : 'unread'}`;
+                card.onclick = () => toggleRead(notif._id, notif.read);
+
+                const typeIcon = getTypeIcon(notif.type);
+                const priorityBadge = getPriorityBadge(notif.priority);
+                const readBadge = notif.read 
+                    ? '<span class="badge badge-read">✓ Leída</span>'
+                    : '<span class="badge badge-unread">● No Leída</span>';
+
+                card.innerHTML = `
+                    <div class="notification-header">
+                        <div class="notification-title">
+                            <span class="notification-icon">${typeIcon}</span>
+                            ${notif.title || 'Notificación'}
+                        </div>
+                        <div class="notification-date">${formatDate(notif.createdAt)}</div>
+                    </div>
+                    <div class="notification-message">${notif.message || 'Sin mensaje'}</div>
+                    <div class="notification-footer">
+                        <div class="notification-meta">
+                            ${priorityBadge}
+                            <span class="badge badge-type">${notif.type || 'SYSTEM'}</span>
+                            ${readBadge}
+                        </div>
+                        <button class="btn-mark-read" onclick="event.stopPropagation(); toggleRead('${notif._id}', ${notif.read})">
+                            ${notif.read ? '↩️ Marcar no leída' : '✓ Marcar leída'}
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function renderPagination(meta) {
+            const pagination = document.getElementById('pagination');
+            if (!meta || meta.pages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            for (let i = 1; i <= Math.min(meta.pages, 10); i++) {
+                html += `<button class="page-btn ${i === meta.page ? 'active' : ''}" onclick="loadNotifications(${i})">${i}</button>`;
+            }
+            if (meta.pages > 10) html += `<span style="padding: 8px;">... ${meta.pages}</span>`;
+            pagination.innerHTML = html;
+            currentPage = meta.page;
+        }
+
+        async function updateStats() {
+            const token = checkAuth();
+            if (!token) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/notifications?limit=1000`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                if (response.ok && data.ok) {
+                    const all = data.data || [];
+                    const unread = all.filter(n => !n.read);
+                    const highPriority = all.filter(n => n.priority === 'high' || n.priority === 'critical');
+                    const today = all.filter(n => {
+                        const date = new Date(n.createdAt);
+                        const now = new Date();
+                        return date.toDateString() === now.toDateString();
+                    });
+
+                    document.getElementById('totalNotif').textContent = all.length;
+                    document.getElementById('unreadNotif').textContent = unread.length;
+                    document.getElementById('highPriorityNotif').textContent = highPriority.length;
+                    document.getElementById('todayNotif').textContent = today.length;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function toggleRead(id, currentState) {
+            const token = checkAuth();
+            if (!token) return;
+
+            try {
+                const endpoint = currentState ? 'unread' : 'read';
+                const response = await fetch(`${API_BASE_URL}/notifications/${id}/${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    loadNotifications(currentPage);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function markAllRead() {
+            const token = checkAuth();
+            if (!token) return;
+
+            const unreadIds = allNotifications.filter(n => !n.read).map(n => n._id);
+            if (unreadIds.length === 0) {
+                alert('No hay notificaciones sin leer');
+                return;
+            }
+
+            if (!confirm(`¿Marcar ${unreadIds.length} notificaciones como leídas?`)) return;
+
+            document.getElementById('loadingOverlay').classList.add('show');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/notifications/mark-read`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ ids: unreadIds })
+                });
+
+                if (response.ok) {
+                    loadNotifications(currentPage);
+                }
+            } catch (error) {
+                alert('Error al marcar notificaciones');
+            } finally {
+                document.getElementById('loadingOverlay').classList.remove('show');
+            }
+        }
+
+        function applyFilters() {
+            currentFilters = {};
+            const type = document.getElementById('filterType').value;
+            const priority = document.getElementById('filterPriority').value;
+            const read = document.getElementById('filterRead').value;
+
+            if (type) currentFilters.type = type;
+            if (priority) currentFilters.priority = priority;
+            if (read) currentFilters.read = read;
+
+            loadNotifications(1);
+        }
+
+        // Inicializar
+        (function init() {
+            const token = checkAuth();
+            if (token) {
+                loadNotifications();
+            }
+        })();
+    </script>
+</body>
+</html>
