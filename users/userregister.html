@@ -19,7 +19,7 @@
 
         /* Navbar */
         .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #45638B 0%, #45638B 100%);
             padding: 0;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             position: sticky;
@@ -44,6 +44,11 @@
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+
+        .navbar-brand img {
+            height: 60px; /* súbele a 60 u 80 si quieres más grande */
+            width: auto;
         }
 
         .navbar-menu {
@@ -106,7 +111,7 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            color: #667eea;
+            color: #45638B;
             text-decoration: none;
             font-size: 14px;
             margin-bottom: 20px;
@@ -253,13 +258,13 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #45638B 0%, #45638B 100%);
             color: white;
         }
 
         .btn-primary:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 20px rgba(69, 99, 139, 0.4);
         }
 
         .btn-primary:disabled {
@@ -333,7 +338,7 @@
 
         .spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border-top: 4px solid #45638B;
             border-radius: 50%;
             width: 50px;
             height: 50px;
@@ -381,15 +386,16 @@
     <nav class="navbar">
         <div class="navbar-container">
             <div class="navbar-brand">
-                🏥 Sistema Hospitalario
+                <img src="imagotipo.png" alt="Optima Consulting">
             </div>
             <ul class="navbar-menu">
-                <li><a href="users-list.html" class="active">Usuarios</a></li>
-                <li><a href="medications-list.html">Medicamentos</a></li>
-                <li><a href="suppliers-list.html">Proveedores</a></li>
-                <li><a href="purchase-orders-list.html">Compras</a></li>
-                <li><a href="inventory-transactions-list.html">Inventario</a></li>
-                <li><a href="notifications-list.html">Notificaciones</a></li>
+                <li><a href="userslist.html" class="active">Usuarios</a></li>
+                <li><a href="hospitalslist.html">Hospitales</a></li>
+                <li><a href="medicationslist.html">Medicamentos</a></li>
+                <li><a href="supplierslist.html">Proveedores</a></li>
+                <li><a href="purchaseorderlist.html">Compras</a></li>
+                <li><a href="inventorytransactionslist.html">Inventario</a></li>
+                <li><a href="notificationslist.html">Notificaciones</a></li>
             </ul>
             <div class="navbar-user">
                 <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
@@ -404,7 +410,7 @@
 
     <!-- Container -->
     <div class="container">
-        <a href="users-list.html" class="back-link">
+        <a href="userslist.html" class="back-link">
             ← Volver a lista de usuarios
         </a>
 
@@ -487,15 +493,12 @@
 
                     <!-- Hospital -->
                     <div class="form-group full-width" id="hospitalGroup">
-                        <label for="hospital">
+                        <label for="hospitalId">
                             Hospital Asignado
                         </label>
-                        <input 
-                            type="text" 
-                            id="hospital" 
-                            name="hospital" 
-                            placeholder="ID del hospital (opcional)"
-                        >
+                        <select id="hospitalId" name="hospitalId">
+                            <option value="">Sin hospital asignado</option>
+                        </select>
                         <small class="help-text">Dejar vacío si no se asigna a un hospital específico</small>
                     </div>
 
@@ -528,199 +531,276 @@
         </div>
     </div>
 
-    <script>
-        // Configuración del API
-        const API_BASE_URL = 'https://backenderp-316e.onrender.com/api';
-        
-        // Elementos del DOM
-        const registerForm = document.getElementById('registerForm');
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        const alertBox = document.getElementById('alert');
-        const btnSubmit = document.getElementById('btnSubmit');
-        const togglePassword = document.getElementById('togglePassword');
-        const passwordInput = document.getElementById('password');
+   <script>
+  // ============================
+  // Configuración del API
+  // ============================
+  const API_BASE_URL = 'https://backenderp-316e.onrender.com/api';
 
-        // Función para verificar autenticación
-        function checkAuth() {
-            const token = localStorage.getItem('token');
-            const user = localStorage.getItem('user');
-            
-            if (!token || !user) {
-                window.location.href = 'login.html';
-                return null;
-            }
+  // Elementos del DOM
+  const registerForm   = document.getElementById('registerForm');
+  const loadingOverlay = document.getElementById('loadingOverlay'); 
+  const alertBox       = document.getElementById('alert');
+  const btnSubmit      = document.getElementById('btnSubmit');
+  const togglePassword = document.getElementById('togglePassword');
+  const passwordInput  = document.getElementById('password');
+  const hospitalSelect = document.getElementById('hospitalId');
 
-            // Verificar expiración del token (8 horas)
-            const loginTime = new Date(localStorage.getItem('loginTime'));
-            const now = new Date();
-            const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
-            
-            if (hoursDiff >= 8) {
-                logout();
-                return null;
-            }
+  // ============================
+  // Funciones de autenticación
+  // ============================
 
-            const currentUser = JSON.parse(user);
-            
-            // Verificar que sea admin o superuser
-            if (currentUser.role !== 'admin' && !currentUser.isSuperUser) {
-                showAlert('No tienes permisos para acceder a esta página', 'error');
-                setTimeout(() => {
-                    window.location.href = 'users-list.html';
-                }, 2000);
-                return null;
-            }
+  function checkAuth() {
+    const token = localStorage.getItem('token');
+    const user  = localStorage.getItem('user');
+    
+    if (!token || !user) {
+      window.location.href = 'login.html';
+      return null;
+    }
 
-            return token;
+    // Verificar expiración del token (8 horas)
+    const loginTimeStr = localStorage.getItem('loginTime');
+    if (!loginTimeStr) {
+      logout();
+      return null;
+    }
+
+    const loginTime = new Date(loginTimeStr);
+    const now       = new Date();
+    const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+    
+    if (hoursDiff >= 8) {
+      logout();
+      return null;
+    }
+
+    const currentUser = JSON.parse(user);
+
+    // Verificar que sea admin o superuser
+    if (currentUser.role !== 'admin' && !currentUser.isSuperUser) {
+      showAlert('No tienes permisos para acceder a esta página', 'error');
+      setTimeout(() => {
+        window.location.href = 'userslist.html';
+      }, 2000);
+      return null;
+    }
+
+    return token;
+  }
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('loginTime');
+    window.location.href = 'login.html';
+  }
+
+  // ============================
+  // UI helpers
+  // ============================
+
+  function showAlert(message, type = 'error') {
+    if (!alertBox) return;
+    alertBox.textContent = message;
+    alertBox.className = `alert alert-${type} show`;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function toggleLoading(show) {
+    if (!loadingOverlay) return;
+    if (show) {
+      loadingOverlay.classList.add('show');
+    } else {
+      loadingOverlay.classList.remove('show');
+    }
+  }
+
+  // ============================
+  // Cargar hospitales en el select
+  // ============================
+
+  async function loadHospitals() {
+    const token = localStorage.getItem('token');
+    if (!token || !hospitalSelect) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/hospitals`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
+      });
 
-        // Función para cerrar sesión
-        function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            localStorage.removeItem('loginTime');
-            window.location.href = 'login.html';
+      const data = await res.json();
+
+      if (res.ok && data.ok) {
+        const hospitals = data.data || [];
+
+        hospitals.forEach((h) => {
+          const option = document.createElement('option');
+          // IMPORTANTE: usar id o _id según lo que devuelva el backend
+          option.value = h.id || h._id;
+          option.textContent = h.name;
+          hospitalSelect.appendChild(option);
+        });
+      } else {
+        console.error('Error al cargar hospitales:', data.message);
+      }
+    } catch (err) {
+      console.error('Error de conexión al cargar hospitales:', err);
+    }
+  }
+
+  // ============================
+  // Toggle password visibility
+  // ============================
+
+  if (togglePassword && passwordInput) {
+    togglePassword.addEventListener('click', function () {
+      const type = passwordInput.type === 'password' ? 'text' : 'password';
+      passwordInput.type = type;
+      togglePassword.textContent = type === 'password' ? '👁️' : '🙈';
+    });
+  }
+
+  // ============================
+  // Cancelar formulario
+  // ============================
+
+  function cancelForm() {
+    if (confirm('¿Estás seguro de que deseas cancelar? Se perderán los datos ingresados.')) {
+      window.location.href = 'userslist.html';
+    }
+  }
+
+  // Haz accesible cancelForm si lo llamas desde el HTML (onclick)
+  window.cancelForm = cancelForm;
+
+  // ============================
+  // Envío del formulario
+  // ============================
+
+  if (registerForm) {
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const token = checkAuth();
+      if (!token) return;
+
+      // Obtener datos del formulario
+      const formData = {
+        name: document.getElementById('name').value.trim(),
+        email: document.getElementById('email').value.trim().toLowerCase(),
+        password: document.getElementById('password').value,
+        role: document.getElementById('role').value,
+        isSuperUser: document.getElementById('isSuperUser').checked
+      };
+
+      // Hospital es opcional (desde el select)
+      if (hospitalSelect) {
+        const hospitalId = hospitalSelect.value;
+        // Si hay valor real, lo agregamos
+        if (hospitalId && hospitalId !== 'undefined' && hospitalId !== 'null') {
+          formData.hospital = hospitalId;
         }
+      }
 
-        // Función para mostrar alertas
-        function showAlert(message, type = 'error') {
-            alertBox.textContent = message;
-            alertBox.className = `alert alert-${type} show`;
-            
-            // Scroll to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+      // Validaciones básicas
+      if (!formData.name || !formData.email || !formData.password || !formData.role) {
+        showAlert('Por favor, completa todos los campos requeridos', 'error');
+        return;
+      }
 
-        // Función para mostrar/ocultar loading
-        function toggleLoading(show) {
-            if (show) {
-                loadingOverlay.classList.add('show');
-            } else {
-                loadingOverlay.classList.remove('show');
-            }
-        }
+      if (formData.password.length < 8) {
+        showAlert('La contraseña debe tener al menos 8 caracteres', 'error');
+        return;
+      }
 
-        // Toggle password visibility
-        togglePassword.addEventListener('click', function() {
-            const type = passwordInput.type === 'password' ? 'text' : 'password';
-            passwordInput.type = type;
-            togglePassword.textContent = type === 'password' ? '👁️' : '🙈';
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        showAlert('Por favor, ingresa un correo electrónico válido', 'error');
+        return;
+      }
+
+      // Deshabilitar botón y mostrar loading
+      if (btnSubmit) {
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = 'Registrando...';
+      }
+      toggleLoading(true);
+      if (alertBox) alertBox.classList.remove('show');
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
         });
 
-        // Cancelar formulario
-        function cancelForm() {
-            if (confirm('¿Estás seguro de que deseas cancelar? Se perderán los datos ingresados.')) {
-                window.location.href = 'users-list.html';
-            }
+        const data = await response.json();
+
+        if (response.ok && data.ok) {
+          showAlert('Usuario registrado exitosamente', 'success');
+          setTimeout(() => {
+            window.location.href = 'userslist.html?registered=true';
+          }, 1500);
+        } else {
+          const errorMessage = data.message || 'Error al registrar usuario';
+          
+          if (response.status === 409) {
+            showAlert('El correo electrónico ya está registrado en el sistema', 'error');
+          } else if (response.status === 400) {
+            showAlert(errorMessage, 'error');
+          } else if (response.status === 403) {
+            showAlert('No tienes permisos para realizar esta acción', 'error');
+          } else {
+            showAlert(errorMessage, 'error');
+          }
+
+          if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = 'Registrar Usuario';
+          }
         }
 
-        // Manejar envío del formulario
-        registerForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const token = checkAuth();
-            if (!token) return;
+      } catch (error) {
+        console.error('Error:', error);
+        showAlert('Error de conexión. Verifica tu internet e intenta nuevamente.', 'error');
+        if (btnSubmit) {
+          btnSubmit.disabled = false;
+          btnSubmit.textContent = 'Registrar Usuario';
+        }
+      } finally {
+        toggleLoading(false);
+      }
+    });
+  }
 
-            // Obtener datos del formulario
-            const formData = {
-                name: document.getElementById('name').value.trim(),
-                email: document.getElementById('email').value.trim().toLowerCase(),
-                password: document.getElementById('password').value,
-                role: document.getElementById('role').value,
-                isSuperUser: document.getElementById('isSuperUser').checked
-            };
+  // ============================
+  // Limpiar alertas al escribir
+  // ============================
+  document.querySelectorAll('input, select').forEach(input => {
+    input.addEventListener('input', () => {
+      if (alertBox) alertBox.classList.remove('show');
+    });
+  });
 
-            // Hospital es opcional
-            const hospitalId = document.getElementById('hospital').value.trim();
-            if (hospitalId) {
-                formData.hospital = hospitalId;
-            }
-
-            // Validaciones
-            if (!formData.name || !formData.email || !formData.password || !formData.role) {
-                showAlert('Por favor, completa todos los campos requeridos', 'error');
-                return;
-            }
-
-            if (formData.password.length < 8) {
-                showAlert('La contraseña debe tener al menos 8 caracteres', 'error');
-                return;
-            }
-
-            // Validar formato de email
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(formData.email)) {
-                showAlert('Por favor, ingresa un correo electrónico válido', 'error');
-                return;
-            }
-
-            // Deshabilitar botón y mostrar loading
-            btnSubmit.disabled = true;
-            btnSubmit.textContent = 'Registrando...';
-            toggleLoading(true);
-            alertBox.classList.remove('show');
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/auth/register`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.ok) {
-                    // Registro exitoso
-                    showAlert('Usuario registrado exitosamente', 'success');
-                    
-                    // Redirigir a lista de usuarios después de 1.5 segundos
-                    setTimeout(() => {
-                        window.location.href = 'users-list.html?registered=true';
-                    }, 1500);
-
-                } else {
-                    // Error en el registro
-                    const errorMessage = data.message || 'Error al registrar usuario';
-                    
-                    if (response.status === 409) {
-                        showAlert('El correo electrónico ya está registrado en el sistema', 'error');
-                    } else if (response.status === 400) {
-                        showAlert(errorMessage, 'error');
-                    } else if (response.status === 403) {
-                        showAlert('No tienes permisos para realizar esta acción', 'error');
-                    } else {
-                        showAlert(errorMessage, 'error');
-                    }
-
-                    btnSubmit.disabled = false;
-                    btnSubmit.textContent = 'Registrar Usuario';
-                }
-
-            } catch (error) {
-                console.error('Error:', error);
-                showAlert('Error de conexión. Verifica tu internet e intenta nuevamente.', 'error');
-                btnSubmit.disabled = false;
-                btnSubmit.textContent = 'Registrar Usuario';
-            } finally {
-                toggleLoading(false);
-            }
-        });
-
-        // Limpiar alertas al escribir
-        document.querySelectorAll('input, select').forEach(input => {
-            input.addEventListener('input', () => {
-                alertBox.classList.remove('show');
-            });
-        });
-
-        // Inicializar
-        (function init() {
-            checkAuth();
-            document.getElementById('name').focus();
-        })();
-    </script>
+  // ============================
+  // Inicialización
+  // ============================
+  (function init() {
+    const token = checkAuth();
+    if (token) {
+      loadHospitals();
+      const nameInput = document.getElementById('name');
+      if (nameInput) nameInput.focus();
+    }
+  })();
+</script>
 </body>
 </html>

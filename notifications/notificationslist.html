@@ -8,9 +8,14 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; min-height: 100vh; }
         
-        .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        .navbar { background: linear-gradient(135deg, #45638B 0%, #45638B 100%); padding: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
         .navbar-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
         .navbar-brand { color: white; font-size: 20px; font-weight: 600; padding: 15px 0; }
+        .navbar-logo {
+            height: 60px;
+            width: auto;
+            display: block;
+        }
         .navbar-menu { display: flex; list-style: none; gap: 5px; }
         .navbar-menu li a { color: white; text-decoration: none; padding: 20px 18px; display: block; transition: background 0.3s; font-size: 14px; font-weight: 500; }
         .navbar-menu li a:hover { background: rgba(255,255,255,0.1); }
@@ -28,7 +33,7 @@
         .filter-group { display: flex; flex-direction: column; }
         .filter-group label { font-size: 12px; color: #666; margin-bottom: 5px; font-weight: 500; }
         .filter-group select { padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
-        .btn-filter { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .btn-filter { background: #45638B; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
         .btn-mark-all { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-left: 10px; }
         
         .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
@@ -36,6 +41,14 @@
         .stat-value { font-size: 28px; font-weight: 700; color: #667eea; margin-bottom: 5px; }
         .stat-label { font-size: 12px; color: #666; text-transform: uppercase; }
         
+        /* Layout principal lista + detalle */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 2fr 1.2fr;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
         .notifications-container { display: flex; flex-direction: column; gap: 15px; }
         .notification-card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 20px; transition: all 0.3s; cursor: pointer; border-left: 4px solid transparent; }
         .notification-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); transform: translateY(-2px); }
@@ -67,10 +80,104 @@
         
         .btn-mark-read { background: transparent; border: 1px solid #e0e0e0; color: #666; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.3s; }
         .btn-mark-read:hover { background: #667eea; color: white; border-color: #667eea; }
+
+        /* Panel de detalle */
+        .detail-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 20px 24px;
+            min-height: 180px;
+        }
+        .detail-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .detail-subtitle {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 16px;
+        }
+        .detail-section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #777;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        .detail-message {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        .detail-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 16px;
+        }
+        .detail-meta-item span {
+            display: block;
+        }
+        .detail-meta-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #999;
+        }
+        .detail-meta-value {
+            font-weight: 500;
+            color: #444;
+        }
+        .detail-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .btn-detail-primary {
+            background: #667eea;
+            color: #fff;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-detail-secondary {
+            background: transparent;
+            color: #667eea;
+            border: 1px solid #667eea;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-detail-danger {
+            background: #e53935;
+            color: #fff;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .detail-empty {
+            text-align: center;
+            font-size: 14px;
+            color: #999;
+            padding: 30px 10px;
+        }
         
         .loading-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); z-index: 1000; justify-content: center; align-items: center; }
         .loading-overlay.show { display: flex; }
-        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #45638B; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         .empty-state { text-align: center; padding: 80px 20px; color: #999; background: white; border-radius: 12px; }
@@ -80,6 +187,12 @@
         .page-btn { padding: 8px 16px; border: 1px solid #e0e0e0; background: white; border-radius: 6px; cursor: pointer; }
         .page-btn.active { background: #667eea; color: white; border-color: #667eea; }
         
+        @media (max-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @media (max-width: 768px) {
             .navbar-menu { display: none; }
             .filter-grid { grid-template-columns: 1fr; }
@@ -90,14 +203,15 @@
 <body>
     <nav class="navbar">
         <div class="navbar-container">
-            <div class="navbar-brand">🏥 Sistema Hospitalario</div>
+            <img src="imagotipo.png" alt="Sistema Hospitalario" class="navbar-logo">
             <ul class="navbar-menu">
-                <li><a href="users-list.html">Usuarios</a></li>
-                <li><a href="medications.html">Medicamentos</a></li>
-                <li><a href="suppliers.html">Proveedores</a></li>
-                <li><a href="purchase-orders.html">Compras</a></li>
-                <li><a href="inventory-transactions-list.html">Inventario</a></li>
-                <li><a href="notifications-list.html" class="active">Notificaciones</a></li>
+                <li><a href="userslist.html">Usuarios</a></li>
+                <li><a href="hospitalslist.html">Hospitales</a></li>
+                <li><a href="medicationslist.html">Medicamentos</a></li>
+                <li><a href="supplierslist.html">Proveedores</a></li>
+                <li><a href="purchaseorderlist.html">Compras</a></li>
+                <li><a href="inventorytransactionslist.html">Inventario</a></li>
+                <li><a href="notificationslist.html" class="active">Notificaciones</a></li>
             </ul>
             <div class="navbar-user">
                 <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
@@ -167,15 +281,64 @@
             <button class="btn-mark-all" onclick="markAllRead()">✓ Marcar Todas como Leídas</button>
         </div>
 
-        <div class="notifications-container" id="notificationsContainer"></div>
+        <!-- Layout lista + detalle -->
+        <div class="main-layout">
+            <!-- Lista de notificaciones -->
+            <div>
+                <div class="notifications-container" id="notificationsContainer"></div>
 
-        <div id="emptyState" class="empty-state" style="display: none;">
-            <div class="empty-state-icon">🔔</div>
-            <div style="font-size: 20px; color: #666; margin-bottom: 10px;">No hay notificaciones</div>
-            <div style="font-size: 14px;">Todas las notificaciones aparecerán aquí</div>
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon">🔔</div>
+                    <div style="font-size: 20px; color: #666; margin-bottom: 10px;">No hay notificaciones</div>
+                    <div style="font-size: 14px;">Todas las notificaciones aparecerán aquí</div>
+                </div>
+
+                <div class="pagination" id="pagination"></div>
+            </div>
+
+            <!-- Panel de detalle -->
+            <div class="detail-panel" id="detailPanel">
+                <div id="detailEmpty" class="detail-empty">
+                    Selecciona una notificación para ver el detalle.
+                </div>
+                <div id="detailContent" style="display: none;">
+                    <div class="detail-title" id="detailTitle">Título</div>
+                    <div class="detail-subtitle" id="detailSubtitle">Tipo · Estado · Fecha</div>
+
+                    <div class="detail-section-title">Mensaje</div>
+                    <div class="detail-message" id="detailMessage"></div>
+
+                    <div class="detail-section-title">Metadatos</div>
+                    <div class="detail-meta-grid">
+                        <div class="detail-meta-item">
+                            <span class="detail-meta-label">Prioridad</span>
+                            <span class="detail-meta-value" id="detailPriority"></span>
+                        </div>
+                        <div class="detail-meta-item">
+                            <span class="detail-meta-label">Estado</span>
+                            <span class="detail-meta-value" id="detailReadState"></span>
+                        </div>
+                        <div class="detail-meta-item">
+                            <span class="detail-meta-label">Creada</span>
+                            <span class="detail-meta-value" id="detailCreatedAt"></span>
+                        </div>
+                        <div class="detail-meta-item">
+                            <span class="detail-meta-label">Leída</span>
+                            <span class="detail-meta-value" id="detailReadAt"></span>
+                        </div>
+                        <div class="detail-meta-item">
+                            <span class="detail-meta-label">Relacionado</span>
+                            <span class="detail-meta-value" id="detailRelated"></span>
+                        </div>
+                    </div>
+
+                    <div class="detail-actions">
+                        <button class="btn-detail-secondary" id="btnToggleReadDetail" onclick="toggleReadFromDetail()">✓ Marcar leída</button>
+                        <button class="btn-detail-danger" onclick="deleteFromDetail()">🗑 Eliminar</button>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <div class="pagination" id="pagination"></div>
     </div>
 
     <script>
@@ -183,6 +346,7 @@
         let currentPage = 1;
         let currentFilters = {};
         let allNotifications = [];
+        let selectedNotification = null; // para el panel de detalle
 
         function checkAuth() {
             const token = localStorage.getItem('token');
@@ -211,6 +375,18 @@
             return date.toLocaleDateString('es-MX', { month: 'short', day: 'numeric' });
         }
 
+        function formatDateFull(dateString) {
+            if (!dateString) return '—';
+            const date = new Date(dateString);
+            return date.toLocaleString('es-MX', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
         function getTypeIcon(type) {
             const icons = {
                 LOW_STOCK: '📦',
@@ -229,6 +405,11 @@
                 critical: '<span class="badge badge-critical">Crítica</span>'
             };
             return badges[priority] || '';
+        }
+
+        function priorityLabel(priority) {
+            const map = { low: 'Baja', medium: 'Media', high: 'Alta', critical: 'Crítica' };
+            return map[priority] || '—';
         }
 
         async function loadNotifications(page = 1) {
@@ -282,7 +463,7 @@
             notifications.forEach(notif => {
                 const card = document.createElement('div');
                 card.className = `notification-card ${notif.read ? 'read' : 'unread'}`;
-                card.onclick = () => toggleRead(notif._id, notif.read);
+                card.onclick = () => openNotificationDetail(notif._id); // ahora abre detalle
 
                 const typeIcon = getTypeIcon(notif.type);
                 const priorityBadge = getPriorityBadge(notif.priority);
@@ -373,7 +554,12 @@
                 });
 
                 if (response.ok) {
-                    loadNotifications(currentPage);
+                    await loadNotifications(currentPage);
+
+                    // Si la notificación estaba seleccionada en el detalle, actualizar el detalle
+                    if (selectedNotification && selectedNotification._id === id) {
+                        await openNotificationDetail(id);
+                    }
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -405,7 +591,13 @@
                 });
 
                 if (response.ok) {
-                    loadNotifications(currentPage);
+                    await loadNotifications(currentPage);
+                    // Actualizar detalle si la seleccionada estaba en esa lista
+                    if (selectedNotification && unreadIds.includes(selectedNotification._id)) {
+                        selectedNotification.read = true;
+                        selectedNotification.readAt = new Date().toISOString();
+                        renderDetail(selectedNotification);
+                    }
                 }
             } catch (error) {
                 alert('Error al marcar notificaciones');
@@ -425,6 +617,112 @@
             if (read) currentFilters.read = read;
 
             loadNotifications(1);
+        }
+
+        // --------- DETALLE ---------
+
+        async function openNotificationDetail(id) {
+            const token = checkAuth();
+            if (!token) return;
+
+            document.getElementById('loadingOverlay').classList.add('show');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/notifications/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (response.ok && data.ok) {
+                    selectedNotification = data.data;
+                    renderDetail(selectedNotification);
+                }
+            } catch (error) {
+                console.error('Error cargando detalle', error);
+            } finally {
+                document.getElementById('loadingOverlay').classList.remove('show');
+            }
+        }
+
+        function renderDetail(notif) {
+            const detailEmpty = document.getElementById('detailEmpty');
+            const detailContent = document.getElementById('detailContent');
+
+            if (!notif) {
+                detailEmpty.style.display = 'block';
+                detailContent.style.display = 'none';
+                return;
+            }
+
+            detailEmpty.style.display = 'none';
+            detailContent.style.display = 'block';
+
+            document.getElementById('detailTitle').textContent = notif.title || 'Notificación';
+            const type = notif.type || 'SYSTEM';
+            const readState = notif.read ? 'Leída' : 'No leída';
+            const createdShort = formatDate(notif.createdAt);
+
+            document.getElementById('detailSubtitle').textContent = `${type} · ${readState} · ${createdShort}`;
+            document.getElementById('detailMessage').textContent = notif.message || 'Sin mensaje';
+
+            document.getElementById('detailPriority').textContent = priorityLabel(notif.priority);
+            document.getElementById('detailReadState').textContent = notif.read ? 'Leída' : 'No leída';
+            document.getElementById('detailCreatedAt').textContent = formatDateFull(notif.createdAt);
+            document.getElementById('detailReadAt').textContent = notif.readAt ? formatDateFull(notif.readAt) : '—';
+
+            let relatedText = '—';
+            if (notif.medication) {
+                relatedText = `Medicamento: ${notif.medication.name || ''} (${notif.medication.code || ''})`;
+            } else if (notif.purchaseOrder) {
+                relatedText = `OC: ${notif.purchaseOrder.code || ''} (${notif.purchaseOrder.status || ''})`;
+            }
+            document.getElementById('detailRelated').textContent = relatedText;
+
+            const btnToggle = document.getElementById('btnToggleReadDetail');
+            if (notif.read) {
+                btnToggle.textContent = '↩️ Marcar no leída';
+            } else {
+                btnToggle.textContent = '✓ Marcar leída';
+            }
+        }
+
+        async function toggleReadFromDetail() {
+            if (!selectedNotification) return;
+            await toggleRead(selectedNotification._id, selectedNotification.read);
+        }
+
+        async function deleteFromDetail() {
+            if (!selectedNotification) return;
+
+            if (!confirm('¿Eliminar esta notificación de forma permanente?')) return;
+
+            const token = checkAuth();
+            if (!token) return;
+
+            document.getElementById('loadingOverlay').classList.add('show');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/notifications/${selectedNotification._id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                if (response.ok && data.ok) {
+                    // recargar lista
+                    await loadNotifications(currentPage);
+                    // limpiar detalle
+                    selectedNotification = null;
+                    renderDetail(null);
+                } else {
+                    alert(data.message || 'Error al eliminar notificación');
+                }
+            } catch (error) {
+                console.error('Error al eliminar notificación', error);
+                alert('Error al eliminar notificación');
+            } finally {
+                document.getElementById('loadingOverlay').classList.remove('show');
+            }
         }
 
         // Inicializar

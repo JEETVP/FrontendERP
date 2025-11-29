@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Órdenes de Compra - Sistema Hospitalario</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; min-height: 100vh; }
+        
+        .navbar { background: linear-gradient(135deg, #45638B 0%, #45638B 100%); padding: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        .navbar-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
+        .navbar-brand { color: white; font-size: 20px; font-weight: 600; padding: 15px 0; }
+        .navbar-logo {
+            height: 60px;
+            width: auto;
+            display: block;
+        }
+        .navbar-menu { display: flex; list-style: none; gap: 5px; }
+        .navbar-menu li a { color: white; text-decoration: none; padding: 20px 18px; display: block; transition: background 0.3s; font-size: 14px; font-weight: 500; }
+        .navbar-menu li a:hover { background: rgba(255,255,255,0.1); }
+        .navbar-menu li a.active { background: rgba(255,255,255,0.2); border-bottom: 3px solid white; }
+        .navbar-user { display: flex; align-items: center; gap: 15px; color: white; }
+        .btn-logout { background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        
+        .container { max-width: 1400px; margin: 30px auto; padding: 0 20px; }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: #667eea; text-decoration: none; font-size: 14px; margin-bottom: 20px; font-weight: 500; }
+
+        .page-header { background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
+        .page-title { font-size: 28px; color: #333; font-weight: 600; }
+        .btn-add { background: linear-gradient(135deg, #45638B 0%, #45638B 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        
+        .filters { background: white; padding: 20px 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 25px; }
+        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .filter-group { display: flex; flex-direction: column; }
+        .filter-group label { font-size: 12px; color: #666; margin-bottom: 5px; font-weight: 500; }
+        .filter-group input, .filter-group select { padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
+        .btn-filter { background: #45638B; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+
+        /* Layout lista + detalle */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 2fr 1.3fr;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .table-container { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #f8f9fa; }
+        thead th { padding: 16px 20px; text-align: left; font-weight: 600; color: #555; font-size: 13px; text-transform: uppercase; }
+        tbody tr { border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.2s, box-shadow 0.2s; }
+        tbody tr:hover { background: #f8f9ff; }
+        tbody td { padding: 18px 20px; color: #333; font-size: 14px; }
+
+        .row-selected {
+            background: #eef2ff;
+            box-shadow: inset 4px 0 0 #45638B;
+        }
+        
+        .badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .badge-draft { background: #f5f5f5; color: #666; }
+        .badge-sent { background: #e3f2fd; color: #1976d2; }
+        .badge-received { background: #e8f5e9; color: #2e7d32; }
+        
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); z-index: 1000; justify-content: center; align-items: center; }
+        .loading-overlay.show { display: flex; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #45638B; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+        .pagination { display: flex; justify-content: center; gap: 10px; padding: 20px; }
+        .page-btn { padding: 8px 16px; border: 1px solid #e0e0e0; background: white; border-radius: 6px; cursor: pointer; }
+        .page-btn.active { background: #667eea; color: white; border-color: #667eea; }
+
+        /* Panel de detalle (estilo notificaciones) */
+        .detail-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 24px 28px;
+            min-height: 320px;
+        }
+
+        .detail-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #999;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .detail-header-top {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        .detail-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .detail-subtitle {
+            font-size: 13px;
+            color: #777;
+            margin-bottom: 16px;
+        }
+
+        .detail-meta {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px 24px;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+
+        .detail-meta-label {
+            color: #999;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-meta-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .detail-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 6px;
+        }
+
+        .detail-notes {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        .detail-lines-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 6px;
+        }
+
+        .detail-lines-table th,
+        .detail-lines-table td {
+            padding: 8px 6px;
+            font-size: 12px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .detail-lines-table th {
+            color: #777;
+            text-transform: uppercase;
+        }
+
+        .detail-footer-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary-sm {
+            background: #45638B;
+            color: #fff;
+        }
+
+        .btn-danger-sm {
+            background: #e53935;
+            color: #fff;
+        }
+
+        .detail-badge-status {
+            margin-left: 8px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            .detail-panel {
+                margin-top: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar-menu { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <img src="imagotipo.png" alt="Sistema Hospitalario" class="navbar-logo">
+            <ul class="navbar-menu">
+                <li><a href="userslist.html">Usuarios</a></li>
+                <li><a href="medicationslist.html">Medicamentos</a></li>
+                <li><a href="supplierslist.html">Proveedores</a></li>
+                <li><a href="purchaseorderlist.html" class="active">Compras</a></li>
+                <li><a href="inventorytransactionslist.html">Inventario</a></li>
+                <li><a href="notificationslist.html">Notificaciones</a></li>
+            </ul>
+            <div class="navbar-user">
+                <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
+
+    <div class="container">
+        <a href="purchaseorder.html" class="back-link">← Volver al menú</a>
+
+        <div class="page-header">
+            <h1 class="page-title">Lista de Órdenes de Compra</h1>
+            <a href="purchaseordercreate.html" class="btn-add" id="btnAdd">➕ Nueva Orden</a>
+        </div>
+
+        <div class="filters">
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label>Hospital</label>
+                    <select id="filterHospital">
+                        <option value="">Todos los hospitales</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Proveedor</label>
+                    <select id="filterSupplier">
+                        <option value="">Todos los proveedores</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Estado</label>
+                    <select id="filterStatus">
+                        <option value="">Todos</option>
+                        <option value="DRAFT">Borrador</option>
+                        <option value="SENT">Enviada</option>
+                        <option value="RECEIVED">Recibida</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Código</label>
+                    <input type="text" id="filterCode" placeholder="Código de OC">
+                </div>
+            </div>
+            <button class="btn-filter" onclick="applyFilters()">🔍 Buscar</button>
+        </div>
+
+        <div class="main-layout">
+            <!-- Lista -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Hospital</th>
+                            <th>Proveedor</th>
+                            <th>Estado</th>
+                            <th>Total</th>
+                            <th>Líneas</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody"></tbody>
+                </table>
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <div style="font-size: 64px;">📦</div>
+                    <div style="font-size: 20px; color: #666; margin-top: 20px;">No hay órdenes de compra</div>
+                </div>
+                <div class="pagination" id="pagination"></div>
+            </div>
+
+            <!-- Detalle -->
+            <div class="detail-panel">
+                <div id="detailEmpty" class="detail-empty">
+                    Selecciona una orden de compra para ver el detalle.
+                </div>
+
+                <div id="detailContent" style="display:none;">
+                    <div class="detail-header-top" id="detailHeaderTop"></div>
+                    <div class="detail-title" id="detailTitle"></div>
+                    <div class="detail-subtitle" id="detailSubtitle"></div>
+
+                    <div class="detail-meta">
+                        <div>
+                            <div class="detail-meta-label">PRIORIDAD</div>
+                            <div class="detail-meta-value" id="detailPriority">Media</div>
+                        </div>
+                        <div>
+                            <div class="detail-meta-label">ESTADO</div>
+                            <div class="detail-meta-value" id="detailReadStatus">—</div>
+                        </div>
+                        <div>
+                            <div class="detail-meta-label">CREADA</div>
+                            <div class="detail-meta-value" id="detailCreatedAt">—</div>
+                        </div>
+                        <div>
+                            <div class="detail-meta-label">ENTREGA ESTIMADA</div>
+                            <div class="detail-meta-value" id="detailExpectedAt">—</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <div class="detail-meta-label">HOSPITAL</div>
+                        <div class="detail-meta-value" id="detailHospitalName">—</div>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <div class="detail-meta-label">PROVEEDOR</div>
+                        <div class="detail-meta-value" id="detailSupplierName">—</div>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <div class="detail-meta-label">TOTAL</div>
+                        <div class="detail-meta-value" id="detailTotal">—</div>
+                    </div>
+
+                    <div style="margin-top: 10px;">
+                        <div class="detail-section-title">Notas</div>
+                        <div class="detail-notes" id="detailNotes">Sin notas registradas.</div>
+                    </div>
+
+                    <div style="margin-top: 14px;">
+                        <div class="detail-section-title">Líneas de la orden</div>
+                        <table class="detail-lines-table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cant.</th>
+                                    <th>Precio unit.</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detailLinesBody">
+                                <!-- líneas -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="detail-footer-actions">
+                        <!-- Aquí podrías poner acciones (editar, cancelar, etc.) -->
+                        <button class="btn-sm btn-primary-sm" onclick="openInNewPage()">Abrir en pantalla completa</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://backenderp-316e.onrender.com/api';
+        let currentPage = 1;
+        let currentFilters = {};
+        let selectedOrderId = null;
+
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.href = 'login.html'; return null; }
+            return token;
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        function formatDate(dateString, withTime = false) {
+            if (!dateString) return 'N/A';
+            const opts = withTime
+                ? { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }
+                : { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('es-MX', opts);
+        }
+
+        function formatPrice(price, currency = 'MXN') {
+            const n = Number(price || 0);
+            return `${n.toFixed(2)} ${currency}`;
+        }
+
+        function getStatusBadge(status) {
+            const badges = {
+                DRAFT: '<span class="badge badge-draft">Borrador</span>',
+                SENT: '<span class="badge badge-sent">Enviada</span>',
+                RECEIVED: '<span class="badge badge-received">Recibida</span>'
+            };
+            return badges[status] || status;
+        }
+
+        function toggleLoading(show) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (!overlay) return;
+            if (show) overlay.classList.add('show');
+            else overlay.classList.remove('show');
+        }
+
+        // --------- Cargar opciones de Hospitales y Proveedores en los filtros ----------
+        async function loadFilterHospitals() {
+            const token = localStorage.getItem('token');
+            const select = document.getElementById('filterHospital');
+            if (!token || !select) return;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/hospitals`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await res.json();
+                if (res.ok && data.ok) {
+                    const hospitals = data.data || [];
+                    hospitals.forEach(h => {
+                        const opt = document.createElement('option');
+                        opt.value = h.id || h._id;
+                        opt.textContent = h.name || '(sin nombre)';
+                        select.appendChild(opt);
+                    });
+                } else {
+                    console.error('Error al cargar hospitales para filtro:', data.message);
+                }
+            } catch (err) {
+                console.error('Error de conexión al cargar hospitales para filtro:', err);
+            }
+        }
+
+        async function loadFilterSuppliers() {
+            const token = localStorage.getItem('token');
+            const select = document.getElementById('filterSupplier');
+            if (!token || !select) return;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/suppliers`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await res.json();
+                if (res.ok && data.ok) {
+                    const suppliers = data.data || [];
+                    suppliers.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.id || s._id;
+                        opt.textContent = s.name || '(sin nombre)';
+                        select.appendChild(opt);
+                    });
+                } else {
+                    console.error('Error al cargar proveedores para filtro:', data.message);
+                }
+            } catch (err) {
+                console.error('Error de conexión al cargar proveedores para filtro:', err);
+            }
+        }
+
+        // ---------------------- Órdenes (lista) ----------------------
+        async function loadOrders(page = 1) {
+            const token = checkAuth();
+            if (!token) return;
+
+            toggleLoading(true);
+
+            try {
+                const params = new URLSearchParams({
+                    page,
+                    limit: 20,
+                    ...currentFilters
+                });
+
+                const response = await fetch(`${API_BASE_URL}/purchase-orders?${params.toString()}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.ok) {
+                    renderOrders(data.data);
+                    renderPagination(data.meta);
+                } else {
+                    console.error('Error al cargar órdenes:', data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            } finally {
+                toggleLoading(false);
+            }
+        }
+
+        function renderOrders(orders) {
+            const tbody = document.getElementById('ordersTableBody');
+            const emptyState = document.getElementById('emptyState');
+            
+            tbody.innerHTML = '';
+
+            if (!orders || orders.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            orders.forEach(po => {
+                const row = document.createElement('tr');
+                const id = po._id || po.id;
+                if (id && id === selectedOrderId) row.classList.add('row-selected');
+
+                row.addEventListener('click', () => {
+                    // marcar como seleccionada
+                    document.querySelectorAll('#ordersTableBody tr').forEach(r => r.classList.remove('row-selected'));
+                    row.classList.add('row-selected');
+                    selectedOrderId = id;
+                    loadOrderDetail(id);
+                });
+
+                row.innerHTML = `
+                    <td><strong>${po.code || 'N/A'}</strong></td>
+                    <td>${po.hospital?.name || po.hospital || 'N/A'}</td>
+                    <td>${po.supplier?.name || po.supplier || 'N/A'}</td>
+                    <td>${getStatusBadge(po.status)}</td>
+                    <td><strong>${formatPrice(po.total, po.currency || 'MXN')}</strong></td>
+                    <td>${po.lines?.length || 0}</td>
+                    <td>${formatDate(po.createdAt)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderPagination(meta) {
+            const pagination = document.getElementById('pagination');
+            if (!meta || meta.pages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            for (let i = 1; i <= meta.pages; i++) {
+                html += `<button class="page-btn ${i === meta.page ? 'active' : ''}" onclick="loadOrders(${i})">${i}</button>`;
+            }
+            pagination.innerHTML = html;
+            currentPage = meta.page;
+        }
+
+        function applyFilters() {
+            currentFilters = {};
+            const hospital = document.getElementById('filterHospital').value;
+            const supplier = document.getElementById('filterSupplier').value;
+            const status   = document.getElementById('filterStatus').value;
+            const code     = document.getElementById('filterCode').value.trim();
+
+            if (hospital) currentFilters.hospital = hospital;
+            if (supplier) currentFilters.supplier = supplier;
+            if (status)   currentFilters.status   = status;
+            if (code)     currentFilters.code     = code;
+
+            loadOrders(1);
+        }
+
+        // ---------------------- Detalle ----------------------
+        async function loadOrderDetail(id) {
+            const token = checkAuth();
+            if (!token || !id) return;
+
+            const detailEmpty = document.getElementById('detailEmpty');
+            const detailContent = document.getElementById('detailContent');
+            if (detailEmpty) detailEmpty.style.display = 'none';
+            if (detailContent) detailContent.style.display = 'none';
+
+            toggleLoading(true);
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/purchase-orders/${id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await res.json();
+                if (res.ok && data.ok) {
+                    const po = data.data || data.po || data;
+                    renderOrderDetail(po);
+                } else {
+                    console.error('Error al cargar detalle de OC:', data.message);
+                    if (detailEmpty) {
+                        detailEmpty.textContent = 'No se pudo cargar el detalle de la orden.';
+                        detailEmpty.style.display = 'flex';
+                    }
+                }
+            } catch (err) {
+                console.error('Error de conexión al cargar detalle de OC:', err);
+                if (detailEmpty) {
+                    detailEmpty.textContent = 'Error de conexión al cargar el detalle.';
+                    detailEmpty.style.display = 'flex';
+                }
+            } finally {
+                toggleLoading(false);
+            }
+        }
+
+        function renderOrderDetail(po) {
+            const detailEmpty   = document.getElementById('detailEmpty');
+            const detailContent = document.getElementById('detailContent');
+
+            if (detailEmpty) detailEmpty.style.display = 'none';
+            if (detailContent) detailContent.style.display = 'block';
+
+            document.getElementById('detailHeaderTop').textContent =
+                `ORDER_STATUS · ${po.status || '—'}`;
+
+            document.getElementById('detailTitle').textContent =
+                `OC: ${po.code || 'Sin código'}`;
+
+            const hospitalName = po.hospital?.name || po.hospital || '—';
+            const supplierName = po.supplier?.name || po.supplier || '—';
+            document.getElementById('detailSubtitle').textContent =
+                `Hospital: ${hospitalName} · Proveedor: ${supplierName}`;
+
+            document.getElementById('detailHospitalName').textContent = hospitalName;
+            document.getElementById('detailSupplierName').textContent = supplierName;
+
+            document.getElementById('detailTotal').textContent =
+                formatPrice(po.total, po.currency || 'MXN');
+
+            document.getElementById('detailCreatedAt').textContent =
+                formatDate(po.createdAt, true);
+
+            document.getElementById('detailExpectedAt').textContent =
+                po.expectedAt ? formatDate(po.expectedAt, true) : 'No especificada';
+
+            document.getElementById('detailReadStatus').textContent =
+                po.status === 'RECEIVED' ? 'Recibida' :
+                po.status === 'SENT' ? 'Enviada' : 'Borrador';
+
+            document.getElementById('detailPriority').textContent = 'Media'; // si luego tienes prioridad real, se cambia.
+
+            const notes = po.notes || po.comment || po.description;
+            document.getElementById('detailNotes').textContent =
+                notes && notes.trim() !== '' ? notes : 'Sin notas registradas.';
+
+            // líneas
+            const tbody = document.getElementById('detailLinesBody');
+            tbody.innerHTML = '';
+
+            const lines = po.lines || [];
+            if (!lines.length) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="4" style="font-size:12px; color:#999;">Sin líneas registradas en esta orden.</td>`;
+                tbody.appendChild(tr);
+            } else {
+                lines.forEach(line => {
+                    const tr = document.createElement('tr');
+                    const productName =
+                        line.medication?.name ||
+                        line.itemName ||
+                        line.productName ||
+                        line.sku ||
+                        '—';
+
+                    const qty = line.quantity || line.qty || 0;
+                    const unit = line.unitPrice || line.price || 0;
+                    const subtotal = line.subtotal || (qty * unit);
+
+                    tr.innerHTML = `
+                        <td>${productName}</td>
+                        <td>${qty}</td>
+                        <td>${formatPrice(unit, po.currency || 'MXN')}</td>
+                        <td>${formatPrice(subtotal, po.currency || 'MXN')}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        // abrir en otra página (detalle completo)
+        function openInNewPage() {
+            if (!selectedOrderId) return;
+            window.location.href = `purchase-order-detail.html?id=${selectedOrderId}`;
+        }
+
+        // Inicializar
+        (function init() {
+            const token = checkAuth();
+            if (token) {
+                // permisos para btnAdd
+                const user = JSON.parse(localStorage.getItem('user'));
+                const hasPermission = user?.isSuperUser || user?.role === 'admin' || user?.role === 'manager';
+                if (!hasPermission) document.getElementById('btnAdd').style.display = 'none';
+
+                loadFilterHospitals();
+                loadFilterSuppliers();
+                loadOrders();
+            }
+        })();
+    </script>
+</body>
+</html>

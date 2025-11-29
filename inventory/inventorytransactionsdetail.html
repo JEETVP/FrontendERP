@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kardex de Inventario - Sistema Hospitalario</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: linear-gradient(135deg, #45638b 0%, #45638b 100%);
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .navbar-brand {
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            padding: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-logo {
+            height: 60px;
+            width: auto;
+            display: block;
+        }
+
+        .navbar-menu {
+            display: flex;
+            list-style: none;
+            gap: 5px;
+        }
+
+        .navbar-menu li a {
+            color: white;
+            text-decoration: none;
+            padding: 20px 18px;
+            display: block;
+            transition: background 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .navbar-menu li a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-menu li a.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-bottom: 3px solid white;
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: white;
+        }
+
+        .user-info {
+            text-align: right;
+            font-size: 13px;
+        }
+
+        .user-name {
+            font-weight: 600;
+        }
+
+        .user-role {
+            opacity: 0.9;
+            font-size: 12px;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px 40px;
+        }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .page-title-block h1 {
+            font-size: 30px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .page-title-block p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .actions-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #45638b 0%, #45638b 100%);
+            color: #fff;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(69, 99, 139, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #555;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Alert */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-error {
+            background: #fee;
+            color: #c33;
+            border-left: 4px solid #c33;
+        }
+
+        .alert-success {
+            background: #efe;
+            color: #3a9c3a;
+            border-left: 4px solid #3a9c3a;
+        }
+
+        /* Loading */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #45638b;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Card genérico */
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            padding: 20px 24px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        /* Filtros */
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px 16px;
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            color: #444;
+            font-weight: 500;
+        }
+
+        .form-group select,
+        .form-group input {
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid #d0d0d0;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .filter-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        /* Resumen Kardex */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+        }
+
+        .summary-item {
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 4px;
+        }
+
+        .summary-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        /* Tabla */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        thead {
+            background: #f3f4f8;
+        }
+
+        th, td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            white-space: nowrap;
+        }
+
+        th {
+            font-weight: 600;
+            color: #555;
+        }
+
+        tbody tr:hover {
+            background: #fafafa;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .tag-in {
+            background: #e6f4ea;
+            color: #1e7e34;
+        }
+
+        .tag-out {
+            background: #fdecea;
+            color: #b02a37;
+        }
+
+        .tag-adjust {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .muted {
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+            }
+
+            .actions-bar {
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">
+                <img src="imagotipo.png" alt="Sistema Hospitalario" class="navbar-logo">
+            </div>
+            <ul class="navbar-menu">
+                <li><a href="userslist.html">Usuarios</a></li>
+                <li><a href="hospitalslist.html">Hospitales</a></li>
+                <li><a href="medications.html">Medicamentos</a></li>
+                <li><a href="suppliers.html">Proveedores</a></li>
+                <li><a href="purchaseorderlist.html">Compras</a></li>
+                <li><a href="inventory.html" class="active">Inventario</a></li>
+                <li><a href="notificationslist.html">Notificaciones</a></li>
+            </ul>
+            <div class="navbar-user">
+                <div class="user-info">
+                    <div class="user-name" id="userName">Usuario</div>
+                    <div class="user-role" id="userRole">Rol</div>
+                </div>
+                <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Loading -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="container">
+        <div class="page-header">
+            <div class="page-title-block">
+                <h1>📊 Kardex de Inventario</h1>
+                <p>Historial de movimientos y saldo acumulado por hospital y medicamento.</p>
+            </div>
+            <div class="actions-bar">
+                <button class="btn btn-secondary" onclick="goBack()">← Volver</button>
+            </div>
+        </div>
+
+        <!-- Alert principal -->
+        <div id="alert" class="alert"></div>
+
+        <!-- Filtros -->
+        <div class="card">
+            <div class="card-title">Filtros</div>
+            <div class="filters-grid">
+                <div class="form-group">
+                    <label for="filterHospital">Hospital</label>
+                    <select id="filterHospital">
+                        <option value="">Seleccione hospital</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="filterMedication">Medicamento</label>
+                    <select id="filterMedication">
+                        <option value="">Seleccione medicamento</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="filterDateFrom">Desde</label>
+                    <input type="date" id="filterDateFrom">
+                </div>
+                <div class="form-group">
+                    <label for="filterDateTo">Hasta</label>
+                    <input type="date" id="filterDateTo">
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button class="btn btn-secondary" onclick="resetFilters()">Limpiar</button>
+                <button class="btn btn-primary" onclick="loadKardex()">Consultar Kardex</button>
+            </div>
+        </div>
+
+        <!-- Resumen -->
+        <div class="card" id="summaryCard" style="display:none;">
+            <div class="card-title">Resumen del Kardex</div>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label">Hospital</div>
+                    <div class="summary-value" id="summaryHospital">-</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Medicamento</div>
+                    <div class="summary-value" id="summaryMedication">-</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Saldo actual</div>
+                    <div class="summary-value" id="summaryBalance">0</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Entradas totales</div>
+                    <div class="summary-value" id="summaryIn">0</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Salidas totales</div>
+                    <div class="summary-value" id="summaryOut">0</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Movimientos</div>
+                    <div class="summary-value" id="summaryMovs">0</div>
+                </div>
+            </div>
+            <p class="muted" style="margin-top:8px;" id="summaryRange"></p>
+        </div>
+
+        <!-- Tabla Kardex -->
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Cant.</th>
+                        <th>Cant. con signo</th>
+                        <th>Saldo acumulado</th>
+                        <th>Lote</th>
+                        <th>Caducidad</th>
+                        <th>Razón</th>
+                        <th>Doc Origen</th>
+                        <th>Ref</th>
+                    </tr>
+                </thead>
+                <tbody id="kardexBody">
+                    <tr>
+                        <td colspan="10" style="text-align:center; padding:12px;">
+                            Selecciona hospital y medicamento para consultar el Kardex.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://backenderp-316e.onrender.com/api';
+
+        let currentUser = null;
+
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const alertBox = document.getElementById('alert');
+
+        const userName = document.getElementById('userName');
+        const userRole = document.getElementById('userRole');
+
+        const filterHospital = document.getElementById('filterHospital');
+        const filterMedication = document.getElementById('filterMedication');
+        const filterDateFrom = document.getElementById('filterDateFrom');
+        const filterDateTo = document.getElementById('filterDateTo');
+
+        const kardexBody = document.getElementById('kardexBody');
+
+        const summaryCard = document.getElementById('summaryCard');
+        const summaryHospital = document.getElementById('summaryHospital');
+        const summaryMedication = document.getElementById('summaryMedication');
+        const summaryBalance = document.getElementById('summaryBalance');
+        const summaryIn = document.getElementById('summaryIn');
+        const summaryOut = document.getElementById('summaryOut');
+        const summaryMovs = document.getElementById('summaryMovs');
+        const summaryRange = document.getElementById('summaryRange');
+
+        function showAlert(message, type = 'error') {
+            alertBox.textContent = message;
+            alertBox.className = 'alert show ' + (type === 'success' ? 'alert-success' : 'alert-error');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function hideAlert() {
+            alertBox.className = 'alert';
+            alertBox.textContent = '';
+        }
+
+        function toggleLoading(show) {
+            loadingOverlay.classList.toggle('show', show);
+        }
+
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+
+            if (!token || !user) {
+                window.location.href = 'login.html';
+                return null;
+            }
+
+            const loginTime = new Date(localStorage.getItem('loginTime'));
+            const now = new Date();
+            const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+
+            if (hoursDiff >= 8) {
+                logout();
+                return null;
+            }
+
+            currentUser = JSON.parse(user);
+            return token;
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('loginTime');
+            window.location.href = 'login.html';
+        }
+
+        function updateNavbarUser() {
+            if (currentUser) {
+                userName.textContent = currentUser.name || 'Usuario';
+                const roleText = currentUser.isSuperUser
+                    ? 'SuperUser'
+                    : currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
+                userRole.textContent = roleText;
+            }
+        }
+
+        function goBack() {
+            window.location.href = 'inventory.html';
+        }
+
+        async function loadHospitalsAndMedications() {
+            const token = checkAuth();
+            if (!token) return;
+
+            try {
+                toggleLoading(true);
+
+                const [hRes, mRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/hospitals`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }),
+                    fetch(`${API_BASE_URL}/medications`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                ]);
+
+                const hData = await hRes.json();
+                const mData = await mRes.json();
+
+                const hospitals = hData.data || hData || [];
+                const meds = mData.data || mData || [];
+
+                hospitals.forEach(h => {
+                    const opt = document.createElement('option');
+                    opt.value = h.id || h._id;
+                    opt.textContent = h.name || h.code || 'Hospital';
+                    filterHospital.appendChild(opt);
+                });
+
+                meds.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m.id || m._id;
+                    opt.textContent = m.name || m.code || 'Medicamento';
+                    filterMedication.appendChild(opt);
+                });
+
+            } catch (err) {
+                console.error('Error al cargar catálogos:', err);
+                showAlert('Error al cargar hospitales o medicamentos.', 'error');
+            } finally {
+                toggleLoading(false);
+            }
+        }
+
+        function resetFilters() {
+            filterHospital.value = '';
+            filterMedication.value = '';
+            filterDateFrom.value = '';
+            filterDateTo.value = '';
+            kardexBody.innerHTML = `
+                <tr>
+                    <td colspan="10" style="text-align:center; padding:12px;">
+                        Selecciona hospital y medicamento para consultar el Kardex.
+                    </td>
+                </tr>
+            `;
+            summaryCard.style.display = 'none';
+            hideAlert();
+        }
+
+        function formatNumber(n) {
+            if (n == null || isNaN(n)) return '0';
+            return Number(n).toLocaleString('es-MX', { maximumFractionDigits: 4 });
+        }
+
+        function getSignedQty(row) {
+            if (typeof row.signedQty === 'number') return row.signedQty;
+            const qty = row.qty || 0;
+            if (row.type === 'IN') return qty;
+            if (row.type === 'OUT') return -qty;
+            if (row.type === 'ADJUST') {
+                return row.adjustSign === 'IN' ? qty : -qty;
+            }
+            return 0;
+        }
+
+        async function loadKardex() {
+            const token = checkAuth();
+            if (!token) return;
+
+            hideAlert();
+            summaryCard.style.display = 'none';
+
+            const hospital = filterHospital.value;
+            const medication = filterMedication.value;
+            const dateFrom = filterDateFrom.value;
+            const dateTo = filterDateTo.value;
+
+            if (!hospital || !medication) {
+                showAlert('Hospital y medicamento son obligatorios para consultar el Kardex.', 'error');
+                return;
+            }
+
+            kardexBody.innerHTML = `
+                <tr>
+                    <td colspan="10" style="text-align:center; padding:12px;">Cargando...</td>
+                </tr>
+            `;
+
+            const params = new URLSearchParams();
+            params.append('hospital', hospital);
+            params.append('medication', medication);
+            if (dateFrom) params.append('dateFrom', dateFrom);
+            if (dateTo) params.append('dateTo', dateTo);
+
+            try {
+                toggleLoading(true);
+
+                const res = await fetch(`${API_BASE_URL}/inventory-transactions/kardex?` + params.toString(), {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await res.json();
+
+                if (!res.ok || !data.ok) {
+                    kardexBody.innerHTML = `
+                        <tr>
+                            <td colspan="10" style="text-align:center; padding:12px;">Error al cargar Kardex</td>
+                        </tr>
+                    `;
+                    showAlert(data.message || 'Error al cargar Kardex.', 'error');
+                    return;
+                }
+
+                const rows = data.data || [];
+
+                if (!rows.length) {
+                    kardexBody.innerHTML = `
+                        <tr>
+                            <td colspan="10" style="text-align:center; padding:12px;">No hay movimientos en el período seleccionado.</td>
+                        </tr>
+                    `;
+                    summaryCard.style.display = 'none';
+                    return;
+                }
+
+                // Calcular totales
+                let totalIn = 0;
+                let totalOut = 0;
+                let lastBalance = 0;
+
+                rows.forEach(r => {
+                    const s = getSignedQty(r);
+                    if (s > 0) totalIn += s;
+                    if (s < 0) totalOut += Math.abs(s);
+                    if (typeof r.runningBalance === 'number') {
+                        lastBalance = r.runningBalance;
+                    }
+                });
+
+                // Render tabla
+                kardexBody.innerHTML = rows.map(r => {
+                    const created = r.createdAt ? new Date(r.createdAt) : null;
+                    const createdStr = created
+                        ? created.toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })
+                        : '-';
+
+                    const expiry = r.expiryDate ? new Date(r.expiryDate) : null;
+                    const expiryStr = expiry ? expiry.toLocaleDateString('es-MX') : '';
+
+                    let typeClass = 'tag';
+                    if (r.type === 'IN') typeClass += ' tag-in';
+                    else if (r.type === 'OUT') typeClass += ' tag-out';
+                    else typeClass += ' tag-adjust';
+
+                    const signed = getSignedQty(r);
+                    const running = typeof r.runningBalance === 'number' ? r.runningBalance : null;
+
+                    return `
+                        <tr>
+                            <td>${createdStr}</td>
+                            <td><span class="${typeClass}">${r.type}${r.type === 'ADJUST' && r.adjustSign ? ' (' + r.adjustSign + ')' : ''}</span></td>
+                            <td>${formatNumber(r.qty)}</td>
+                            <td>${formatNumber(signed)}</td>
+                            <td>${running != null ? formatNumber(running) : ''}</td>
+                            <td>${r.lot || ''}</td>
+                            <td>${expiryStr}</td>
+                            <td>${r.reason || ''}</td>
+                            <td>${r.refType || ''}</td>
+                            <td>${r.refCode || ''}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                // Actualizar resumen
+                const hospitalText = filterHospital.options[filterHospital.selectedIndex]?.textContent || '-';
+                const medicationText = filterMedication.options[filterMedication.selectedIndex]?.textContent || '-';
+
+                summaryHospital.textContent = hospitalText;
+                summaryMedication.textContent = medicationText;
+                summaryBalance.textContent = formatNumber(lastBalance);
+                summaryIn.textContent = formatNumber(totalIn);
+                summaryOut.textContent = formatNumber(totalOut);
+                summaryMovs.textContent = rows.length.toString();
+
+                if (dateFrom || dateTo) {
+                    let rangeText = 'Rango: ';
+                    rangeText += dateFrom ? new Date(dateFrom).toLocaleDateString('es-MX') : 'inicio';
+                    rangeText += ' — ';
+                    rangeText += dateTo ? new Date(dateTo).toLocaleDateString('es-MX') : 'hoy';
+                    summaryRange.textContent = rangeText;
+                } else {
+                    summaryRange.textContent = 'Rango: todos los movimientos registrados.';
+                }
+
+                summaryCard.style.display = 'block';
+
+            } catch (err) {
+                console.error('Error al cargar Kardex:', err);
+                kardexBody.innerHTML = `
+                    <tr>
+                        <td colspan="10" style="text-align:center; padding:12px;">Error al cargar Kardex</td>
+                    </tr>
+                `;
+                showAlert('Error de conexión al cargar Kardex.', 'error');
+            } finally {
+                toggleLoading(false);
+            }
+        }
+
+        // Inicializar
+        (function init() {
+            const token = checkAuth();
+            if (!token) return;
+
+            updateNavbarUser();
+            loadHospitalsAndMedications();
+
+            // limpiar alert al cambiar filtros
+            [filterHospital, filterMedication, filterDateFrom, filterDateTo].forEach(el => {
+                el.addEventListener('input', hideAlert);
+            });
+        })();
+    </script>
+</body>
+</html>

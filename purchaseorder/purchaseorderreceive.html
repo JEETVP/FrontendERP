@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manejar Orden de Compra - Sistema Hospitalario</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f7fa;
+      min-height: 100vh;
+    }
+
+    /* Navbar */
+    .navbar {
+        /* Cambiado al color solicitado */
+        background: #45638B;
+        padding: 0;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        }
+
+    .navbar-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 20px;
+        }
+
+    .navbar-brand {
+        padding: 15px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        }
+
+        /* Logo en lugar de texto */
+    .navbar-logo {
+        height: 60px;
+        width: auto;
+        display: block;
+        }
+
+    .navbar-menu {
+        display: flex;
+        list-style: none;
+        gap: 5px;
+        }
+
+    .navbar-menu li a {
+        color: white;
+        text-decoration: none;
+        padding: 20px 18px;
+        display: block;
+        transition: background 0.3s ease;
+        font-size: 14px;
+        font-weight: 500;
+        }
+
+    .navbar-menu li a:hover {
+        background: rgba(255, 255, 255, 0.1);
+        }
+
+    .navbar-menu li a.active {
+        background: rgba(255, 255, 255, 0.2);
+        border-bottom: 3px solid white;
+        }
+
+    .navbar-user {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        color: white;
+        }
+
+    .user-info {
+        text-align: right;
+        font-size: 13px;
+        }
+
+    .user-name {
+        font-weight: 600;
+        }
+
+    .user-role {
+        opacity: 0.9;
+        font-size: 12px;
+        }
+
+    .btn-logout {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        }
+
+    .btn-logout:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+    .container {
+      max-width: 1200px;
+      margin: 30px auto;
+      padding: 0 20px 40px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #667eea;
+      text-decoration: none;
+      font-size: 14px;
+      margin-bottom: 15px;
+      font-weight: 500;
+    }
+
+    .page-title {
+      font-size: 28px;
+      color: #333;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .page-subtitle {
+      color: #777;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .select-po-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    .select-po-card label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      margin-right: 8px;
+    }
+    .select-po-card select {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 2px solid #e0e0e0;
+      font-size: 14px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 24px 28px;
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      color: #333;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .po-layout {
+      display: grid;
+      grid-template-columns: 2.4fr 1.3fr;
+      gap: 24px;
+    }
+
+    .section-subtitle {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #999;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead {
+      background: #f8f9fa;
+    }
+    thead th {
+      padding: 10px 12px;
+      text-align: left;
+      color: #666;
+      text-transform: uppercase;
+      font-weight: 600;
+      font-size: 11px;
+    }
+    tbody td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #f0f0f0;
+      color: #333;
+    }
+
+    .po-meta {
+      margin-bottom: 18px;
+    }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    .meta-label { color: #777; }
+    .meta-value { color: #333; font-weight: 500; }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-draft { background: #f5f5f5; color: #666; }
+    .status-sent { background: #e3f2fd; color: #1976d2; }
+    .status-received { background: #e8f5e9; color: #2e7d32; }
+    .status-cancelled { background: #ffebee; color: #c62828; }
+
+    .totals-box {
+      background: #f8f9fb;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-top: 8px;
+      font-size: 13px;
+    }
+    .totals-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .totals-row.total {
+      margin-top: 4px;
+      font-weight: 700;
+      border-top: 1px solid #e0e0e0;
+      padding-top: 4px;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #45638B 0%, #45638B 100%);
+      color: #fff;
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+    .btn-primary:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(69,99,139,0.4);
+    }
+    .btn-secondary {
+      background: #f5f5f5;
+      color: #555;
+    }
+    .btn-secondary:hover { background: #e0e0e0; }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .notes-box {
+      background: #fafafa;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 13px;
+      min-height: 60px;
+    }
+    .notes-empty { color: #aaa; font-style: italic; }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      display: none;
+    }
+    .alert.show { display: block; }
+    .alert-error {
+      background: #ffebee;
+      color: #c62828;
+      border-left: 4px solid #c62828;
+    }
+    .alert-success {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-left: 4px solid #2e7d32;
+    }
+
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.9);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .loading-overlay.show { display: flex; }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #45638B;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Tarjeta de recepción debajo del layout para que no se salga del margen */
+    .receive-card {
+      margin-top: 10px;
+    }
+
+    .receive-grid-header {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #777;
+      margin-bottom: 6px;
+    }
+    .receive-row {
+      display: grid;
+      grid-template-columns: 2fr 1.2fr 1.1fr 1.1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: center;
+      font-size: 13px;
+    }
+    .receive-row input {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      font-size: 13px;
+    }
+    .receive-note {
+      width: 100%;
+      min-height: 70px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      font-size: 13px;
+      resize: vertical;
+    }
+    .receive-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .helper-text {
+      font-size: 12px;
+      color: #999;
+      margin-top: 4px;
+    }
+
+    .info-text {
+      font-size: 12px;
+      color: #777;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 900px) {
+      .po-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">
+                <img src="imagotipo.png" alt="Sistema Hospitalario" class="navbar-logo">
+            </div>
+            <ul class="navbar-menu">
+                <li><a href="users-list.html">Usuarios</a></li>
+                <li><a href="medications.html">Medicamentos</a></li>
+                <li><a href="suppliers.html">Proveedores</a></li>
+                <li><a href="purchase-orders.html" class="active">Compras</a></li>
+                <li><a href="inventory-transactions-list.html">Inventario</a></li>
+                <li><a href="notifications-list.html">Notificaciones</a></li>
+            </ul>
+            <div class="navbar-user">
+                <div class="user-info">
+                    <div class="user-name" id="userName">Usuario</div>
+                    <div class="user-role" id="userRole">Rol</div>
+                </div>
+                <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+            </div>
+        </div>
+    </nav>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+  </div>
+
+  <div class="container">
+    <a href="purchaseorderlist.html" class="back-link">← Volver a lista de órdenes</a>
+
+    <h1 class="page-title">Orden de Compra</h1>
+    <p class="page-subtitle">Selecciona una orden de compra para consultar el detalle, enviarla o registrar su recepción.</p>
+
+    <div id="alert" class="alert"></div>
+
+    <!-- Selección de OC -->
+    <div class="select-po-card">
+      <label for="poSelect">Orden de compra:</label>
+      <select id="poSelect">
+        <option value="">Selecciona una orden…</option>
+      </select>
+    </div>
+
+    <!-- Detalle de OC -->
+    <div class="card">
+      <div class="po-layout">
+        <div>
+          <div class="section-subtitle">Líneas de la orden</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Medicamento</th>
+                <th>Cant. ordenada</th>
+                <th>Recibido</th>
+                <th>Pendiente</th>
+                <th>Precio unit.</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody id="linesTableBody">
+              <tr><td colspan="6" style="padding: 20px 12px; color:#999;">No se ha seleccionado ninguna orden.</td></tr>
+            </tbody>
+          </table>
+
+          <div style="margin-top:18px;">
+            <div class="section-subtitle">Notas de la orden</div>
+            <div id="notesBox" class="notes-box">
+              <span class="notes-empty">Sin notas.</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-subtitle">Información general</div>
+          <div class="po-meta" id="poMeta">
+            <div class="meta-row">
+              <span class="meta-label">Código:</span>
+              <span class="meta-value" id="poCode">—</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Hospital:</span>
+              <span class="meta-value" id="poHospital">—</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Proveedor:</span>
+              <span class="meta-value" id="poSupplier">—</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Estado:</span>
+              <span class="meta-value"><span id="poStatusBadge" class="status-badge status-draft">—</span></span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Creada:</span>
+              <span class="meta-value" id="poCreatedAt">—</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Recibida:</span>
+              <span class="meta-value" id="poReceivedAt">—</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="section-subtitle">Totales</div>
+            <div class="totals-box">
+              <div class="totals-row">
+                <span>Subtotal</span>
+                <span id="poSubtotal">$0.00</span>
+              </div>
+              <div class="totals-row">
+                <span>Impuestos (<span id="poTaxRate">0%</span>)</span>
+                <span id="poTaxAmount">$0.00</span>
+              </div>
+              <div class="totals-row total">
+                <span>Total</span>
+                <span id="poTotal">$0.00</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-row" style="margin-top:16px;">
+            <button id="btnSend" class="btn btn-primary" disabled>📤 Enviar OC</button>
+          </div>
+
+          <p class="info-text" id="statusMessage">
+            No se ha seleccionado ninguna orden.
+          </p>
+        </div>
+      </div>
+
+      <!-- TARJETA DE RECEPCIÓN (debajo del layout para que no se salga del margen) -->
+      <div class="receive-card" id="receiveSection" style="display:none; margin-top:24px;">
+        <div class="card-title" style="margin-bottom:8px;">Recepción de mercancía</div>
+        <p class="helper-text">
+          Indica la cantidad a recibir por línea (por defecto se propone la cantidad pendiente). Puedes ajustar lotes, caducidad y costo unitario si aplica.
+        </p>
+
+        <div id="receiveLinesContainer" style="margin-top:10px;"></div>
+
+        <div style="margin-top:12px;">
+          <label for="receiveNote" style="font-size:13px; font-weight:500; color:#333;">Nota de recepción (opcional)</label>
+          <textarea id="receiveNote" class="receive-note" placeholder="Ej. Recepción parcial de X medicamentos..."></textarea>
+        </div>
+
+        <div class="receive-footer">
+          <button type="button" class="btn btn-secondary" onclick="reloadCurrentPO()">Cancelar</button>
+          <button type="button" id="btnReceive" class="btn btn-primary">✅ Registrar recepción</button>
+        </div>
+
+        <p class="info-text" id="receiveHint"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = 'https://backenderp-316e.onrender.com/api';
+
+    let purchaseOrders = [];
+    let currentPO = null;
+    let currentPOId = null;
+
+    const alertBox = document.getElementById('alert');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    }
+
+    function checkAuth() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = 'login.html';
+        return null;
+      }
+      return token;
+    }
+
+    function toggleLoading(show) {
+      if (!loadingOverlay) return;
+      if (show) loadingOverlay.classList.add('show');
+      else loadingOverlay.classList.remove('show');
+    }
+
+    function showAlert(message, type = 'error') {
+      if (!alertBox) return;
+      alertBox.textContent = message;
+      alertBox.className = `alert alert-${type} show`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function clearAlert() {
+      if (!alertBox) return;
+      alertBox.classList.remove('show');
+    }
+
+    function formatCurrency(value, currency = 'MXN') {
+      const num = Number(value || 0);
+      return num.toLocaleString('es-MX', {
+        style: 'currency',
+        currency: currency || 'MXN',
+        minimumFractionDigits: 2
+      });
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '—';
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '—';
+      return d.toLocaleString('es-MX', {
+        year: 'numeric', month: 'short', day: '2-digit',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    function setStatusBadge(status) {
+      const el = document.getElementById('poStatusBadge');
+      if (!el) return;
+      const st = (status || '').toUpperCase();
+      el.className = 'status-badge';
+      if (st === 'DRAFT') el.classList.add('status-draft');
+      else if (st === 'SENT') el.classList.add('status-sent');
+      else if (st === 'RECEIVED') el.classList.add('status-received');
+      else if (st === 'CANCELLED') el.classList.add('status-cancelled');
+      el.textContent = st || '—';
+    }
+
+    function updateStatusMessage() {
+      const p = document.getElementById('statusMessage');
+      if (!currentPO) {
+        p.textContent = 'Selecciona una orden de compra para ver su detalle.';
+        return;
+      }
+      if (currentPO.status === 'DRAFT') {
+        p.textContent = 'La orden está en BORRADOR. Puedes revisarla y luego enviarla al proveedor.';
+      } else if (currentPO.status === 'SENT') {
+        p.textContent = 'La orden está ENVIADA. Registra la recepción conforme vayan llegando los productos.';
+      } else if (currentPO.status === 'RECEIVED') {
+        p.textContent = 'La orden está RECIBIDA. No es posible registrar más recepciones.';
+      } else if (currentPO.status === 'CANCELLED') {
+        p.textContent = 'La orden está CANCELADA.';
+      } else {
+        p.textContent = '';
+      }
+    }
+
+    /* =========================
+       Cargar lista de OCs
+       ========================= */
+    async function loadPOOptions() {
+      const token = checkAuth();
+      if (!token) return;
+
+      toggleLoading(true);
+      try {
+        const params = new URLSearchParams({
+          limit: 100,
+          sort: '-createdAt'
+        });
+        const res = await fetch(`${API_BASE_URL}/purchase-orders?${params.toString()}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          showAlert(data.message || 'Error al cargar órdenes de compra');
+          return;
+        }
+        purchaseOrders = data.data || [];
+        const select = document.getElementById('poSelect');
+        select.innerHTML = '<option value="">Selecciona una orden…</option>';
+        purchaseOrders.forEach(po => {
+          const opt = document.createElement('option');
+          opt.value = po.id || po._id;
+          opt.textContent = `${po.code || 'Sin código'} — ${po.status || 'DRAFT'} — ${formatDate(po.createdAt)}`;
+          select.appendChild(opt);
+        });
+
+        // Si viene un id por query, selecciónalo
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialId = urlParams.get('id');
+        if (initialId) {
+          const found = purchaseOrders.find(p => (p.id || p._id) === initialId);
+          if (found) {
+            select.value = initialId;
+            await loadPOById(initialId);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        showAlert('Error de conexión al cargar órdenes de compra');
+      } finally {
+        toggleLoading(false);
+      }
+    }
+
+    /* =========================
+       Cargar una OC por id
+       ========================= */
+    async function loadPOById(id) {
+      const token = checkAuth();
+      if (!token) return;
+      if (!id) {
+        currentPO = null;
+        currentPOId = null;
+        renderPO(null);
+        return;
+      }
+
+      toggleLoading(true);
+      clearAlert();
+      try {
+        const res = await fetch(`${API_BASE_URL}/purchase-orders/${id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          showAlert(data.message || 'Error al cargar la orden de compra');
+          renderPO(null);
+          return;
+        }
+        currentPO = data.data;
+        currentPOId = currentPO.id || currentPO._id; // <-- aquí nos aseguramos de guardar bien el id
+        renderPO(currentPO);
+      } catch (err) {
+        console.error(err);
+        showAlert('Error de conexión al cargar la orden de compra');
+        renderPO(null);
+      } finally {
+        toggleLoading(false);
+      }
+    }
+
+    /* =========================
+       Render de la OC
+       ========================= */
+    function renderPO(po) {
+      const tbody = document.getElementById('linesTableBody');
+      const notesBox = document.getElementById('notesBox');
+      const receiveSection = document.getElementById('receiveSection');
+      const receiveLinesContainer = document.getElementById('receiveLinesContainer');
+      const BtnSend = document.getElementById('btnSend');
+      const BtnReceive = document.getElementById('btnReceive');
+      const receiveHint = document.getElementById('receiveHint');
+
+      tbody.innerHTML = '';
+      notesBox.innerHTML = '';
+      receiveLinesContainer.innerHTML = '';
+      receiveHint.textContent = '';
+
+      if (!po) {
+        tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px 12px; color:#999;">No se ha seleccionado ninguna orden.</td></tr>`;
+        notesBox.innerHTML = `<span class="notes-empty">Sin notas.</span>`;
+        document.getElementById('poCode').textContent = '—';
+        document.getElementById('poHospital').textContent = '—';
+        document.getElementById('poSupplier').textContent = '—';
+        setStatusBadge('');
+        document.getElementById('poCreatedAt').textContent = '—';
+        document.getElementById('poReceivedAt').textContent = '—';
+        document.getElementById('poSubtotal').textContent = '$0.00';
+        document.getElementById('poTaxRate').textContent = '0%';
+        document.getElementById('poTaxAmount').textContent = '$0.00';
+        document.getElementById('poTotal').textContent = '$0.00';
+        BtnSend.disabled = true;
+        BtnReceive.disabled = true;
+        receiveSection.style.display = 'none';
+        updateStatusMessage();
+        return;
+      }
+
+      // Datos principales
+      document.getElementById('poCode').textContent = po.code || '—';
+      document.getElementById('poHospital').textContent = po.hospital?.name || po.hospital?.code || '—';
+      document.getElementById('poSupplier').textContent = po.supplier?.name || '—';
+      setStatusBadge(po.status);
+      document.getElementById('poCreatedAt').textContent = formatDate(po.createdAt);
+      document.getElementById('poReceivedAt').textContent = po.receivedAt ? formatDate(po.receivedAt) : '—';
+
+      const currency = po.currency || 'MXN';
+      document.getElementById('poSubtotal').textContent = formatCurrency(po.subtotal, currency);
+      document.getElementById('poTaxRate').textContent = `${(Number(po.taxRate || 0) * 100).toFixed(2)}%`;
+      document.getElementById('poTaxAmount').textContent = formatCurrency(po.taxAmount, currency);
+      document.getElementById('poTotal').textContent = formatCurrency(po.total, currency);
+
+      // Notas
+      if (po.notes && po.notes.trim()) {
+        notesBox.textContent = po.notes;
+      } else {
+        notesBox.innerHTML = `<span class="notes-empty">Sin notas.</span>`;
+      }
+
+      // Líneas
+      const lines = po.lines || [];
+      if (!lines.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px 12px; color:#999;">La orden no tiene líneas.</td></tr>`;
+      } else {
+        lines.forEach(l => {
+          const tr = document.createElement('tr');
+          const medName = l.medication?.name || l.description || String(l.medication);
+          const ordered = Number(l.qty || 0);
+          const received = Number(l.received || 0);
+          const pending = Number(l.pending ?? (ordered - received));
+          tr.innerHTML = `
+            <td>${medName}</td>
+            <td>${ordered}</td>
+            <td>${received}</td>
+            <td>${pending}</td>
+            <td>${formatCurrency(l.unitPrice, currency)}</td>
+            <td>${formatCurrency(l.subtotal, currency)}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Botón "Enviar"
+      BtnSend.disabled = po.status !== 'DRAFT';
+
+      // Sección de recepción
+      const pendingLines = lines.filter(l => {
+        const ordered = Number(l.qty || 0);
+        const received = Number(l.received || 0);
+        const pending = Number(l.pending ?? (ordered - received));
+        return pending > 0;
+      });
+
+      if (po.status === 'RECEIVED' || !pendingLines.length) {
+        receiveSection.style.display = 'none';
+        BtnReceive.disabled = true;
+        if (po.status === 'RECEIVED') {
+          receiveHint.textContent = 'La orden ya está completamente recibida.';
+        }
+      } else {
+        receiveSection.style.display = 'block';
+        BtnReceive.disabled = false;
+
+        const header = document.createElement('div');
+        header.className = 'receive-grid-header';
+        header.textContent = 'Cantidad a recibir, lote, caducidad y costo unitario';
+        receiveLinesContainer.appendChild(header);
+
+        pendingLines.forEach((l, idx) => {
+          const ordered = Number(l.qty || 0);
+          const received = Number(l.received || 0);
+          const pending = Number(l.pending ?? (ordered - received));
+
+          const medName = l.medication?.name || l.description || String(l.medication);
+          const sub = document.createElement('div');
+          sub.style.marginBottom = '6px';
+          sub.style.fontSize = '12px';
+          sub.style.fontWeight = '500';
+          sub.textContent = `${medName} (ID: ${l.medication}) — Ordenado: ${ordered} · Recibido: ${received} · Pendiente: ${pending}`;
+          receiveLinesContainer.appendChild(sub);
+
+          const row = document.createElement('div');
+          row.className = 'receive-row';
+          row.dataset.medicationId = String(l.medication);
+          row.innerHTML = `
+            <input type="number" min="0" step="0.0001" value="${pending}" placeholder="Cant. a recibir">
+            <input type="text" placeholder="Lote">
+            <input type="date">
+            <input type="number" min="0" step="0.01" value="${Number(l.unitPrice || 0)}" placeholder="Costo unitario">
+          `;
+          receiveLinesContainer.appendChild(row);
+        });
+
+        receiveHint.textContent = (po.status === 'DRAFT')
+          ? 'La orden está en DRAFT pero ya puedes registrar recepciones; el sistema actualizará el estado automáticamente.'
+          : 'La orden está ENVIADA. Registra la recepción conforme vayan llegando los productos.';
+      }
+
+      updateStatusMessage();
+    }
+
+    /* =========================
+       Re-cargar la OC actual (cancelar recepción)
+       ========================= */
+    function reloadCurrentPO() {
+      if (!currentPOId) return;
+      loadPOById(currentPOId);
+      document.getElementById('receiveNote').value = '';
+    }
+
+    /* =========================
+       Enviar OC (DRAFT -> SENT)
+       ========================= */
+    async function handleSendPO() {
+      if (!currentPOId) {
+        showAlert('Selecciona primero una orden de compra.', 'error');
+        return;
+      }
+      const token = checkAuth();
+      if (!token) return;
+
+      if (!confirm('¿Confirmas que deseas marcar la orden como ENVIADA?')) return;
+
+      toggleLoading(true);
+      clearAlert();
+      try {
+        const res = await fetch(`${API_BASE_URL}/purchase-orders/${currentPOId}/send`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const data = await res.json();
+        if (res.ok && data.ok) {
+          showAlert('Orden marcada como ENVIADA correctamente.', 'success');
+          await loadPOById(currentPOId); // refrescar
+        } else {
+          showAlert(data.message || 'Error al enviar la orden', 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        showAlert('Error de conexión al enviar la orden', 'error');
+      } finally {
+        toggleLoading(false);
+      }
+    }
+
+    /* =========================
+       Registrar recepción
+       ========================= */
+    async function handleReceive() {
+      if (!currentPOId) {
+        showAlert('Selecciona primero una orden de compra.', 'error');
+        return;
+      }
+      const token = checkAuth();
+      if (!token) return;
+
+      const receiveSection = document.getElementById('receiveSection');
+      if (receiveSection.style.display === 'none') {
+        showAlert('No hay líneas pendientes por recibir.', 'error');
+        return;
+      }
+
+      const rows = Array.from(document.querySelectorAll('#receiveLinesContainer .receive-row'));
+      const items = [];
+
+      rows.forEach(row => {
+        const medication = row.dataset.medicationId;
+        const [qtyInput, lotInput, expiryInput, unitCostInput] = row.querySelectorAll('input');
+        const qty = Number(qtyInput.value || 0);
+        if (qty > 0) {
+          const item = {
+            medication,
+            qty,
+          };
+          const lot = lotInput.value.trim();
+          if (lot) item.lot = lot;
+          const expiry = expiryInput.value;
+          if (expiry) item.expiryDate = expiry;
+          const unitCost = unitCostInput.value;
+          if (unitCost !== '') item.unitCost = Number(unitCost);
+          items.push(item);
+        }
+      });
+
+      if (!items.length) {
+        showAlert('Debes capturar al menos una cantidad a recibir.', 'error');
+        return;
+      }
+
+      const body = {
+        items,
+        note: document.getElementById('receiveNote').value.trim() || undefined
+      };
+
+      toggleLoading(true);
+      clearAlert();
+      try {
+        const res = await fetch(`${API_BASE_URL}/purchase-orders/${currentPOId}/receive`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+
+        let data;
+        try {
+          data = await res.json();
+        } catch (_) {
+          data = { ok: false, message: 'Respuesta inesperada del servidor.' };
+        }
+
+        if (res.ok && data.ok) {
+          showAlert('Recepción registrada correctamente.', 'success');
+          await loadPOById(currentPOId); // refrescar detalle
+        } else {
+          showAlert(data.message || 'Error al registrar la recepción.', 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        showAlert('Error de conexión al registrar la recepción.', 'error');
+      } finally {
+        toggleLoading(false);
+      }
+    }
+
+    /* =========================
+       Eventos e inicialización
+       ========================= */
+    document.getElementById('poSelect').addEventListener('change', (e) => {
+      const id = e.target.value;
+      currentPOId = id || null;
+      if (!id) {
+        renderPO(null);
+      } else {
+        loadPOById(id);
+      }
+    });
+
+    document.getElementById('btnSend').addEventListener('click', handleSendPO);
+    document.getElementById('btnReceive').addEventListener('click', handleReceive);
+
+    (function init() {
+      const token = checkAuth();
+      if (!token) return;
+      loadPOOptions();
+    })();
+  </script>
+</body>
+</html>
+
+

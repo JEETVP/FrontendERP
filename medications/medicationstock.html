@@ -19,7 +19,7 @@
 
         /* Navbar */
         .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #45638B 0%, #45638B 100%);
             padding: 0;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             position: sticky;
@@ -44,6 +44,12 @@
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+
+        .navbar-logo {
+            height: 60px;
+            width: auto;
+            display: block;
         }
 
         .navbar-menu {
@@ -106,7 +112,7 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            color: #667eea;
+            color: #45638B;
             text-decoration: none;
             font-size: 14px;
             margin-bottom: 20px;
@@ -144,7 +150,7 @@
 
         /* Medication Info */
         .med-info {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #45638B 0%, #45638B 100%);
             padding: 20px;
             border-radius: 8px;
             color: white;
@@ -211,7 +217,7 @@
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #45638B;
             box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
         }
 
@@ -288,7 +294,7 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #45638B 0%, #45638B 100%);
             color: white;
         }
 
@@ -374,7 +380,7 @@
 
         .spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border-top: 4px solid #45638B;
             border-radius: 50%;
             width: 50px;
             height: 50px;
@@ -443,10 +449,11 @@
     <nav class="navbar">
         <div class="navbar-container">
             <div class="navbar-brand">
-                🏥 Sistema Hospitalario
+                <img src="imagotipo.png" alt="Sistema Hospitalario" class="navbar-logo">
             </div>
             <ul class="navbar-menu">
                 <li><a href="users-list.html">Usuarios</a></li>
+                <li><a href="hospitalslist.html">Hospitales</a></li>
                 <li><a href="medications.html" class="active">Medicamentos</a></li>
                 <li><a href="suppliers-list.html">Proveedores</a></li>
                 <li><a href="purchase-orders-list.html">Compras</a></li>
@@ -530,14 +537,9 @@
                             ID del Hospital
                             <span class="required">*</span>
                         </label>
-                        <input 
-                            type="text" 
-                            id="hospitalId" 
-                            name="hospitalId" 
-                            placeholder="ID del hospital"
-                            required
-                        >
-                        <small class="help-text">Ingresa el ID del hospital donde se realizará el ajuste</small>
+                        <select id="hospitalId" class="form-control" required>
+                            <option value="">Selecciona un hospital...</option>
+                        </select>
                     </div>
 
                     <!-- Cantidad -->
@@ -626,280 +628,341 @@
             </form>
         </div>
     </div>
+<script>
+    // Configuración del API
+    const API_BASE_URL = 'https://backenderp-316e.onrender.com/api';
+    
+    let currentUser = null;
+    let medicationId = null;
+    let selectedAction = 'increment';
 
-    <script>
-        // Configuración del API
-        const API_BASE_URL = 'https://backenderp-316e.onrender.com/api';
+    // Elementos del DOM
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const alertBox = document.getElementById('alert');
+    const searchBox = document.getElementById('searchBox');
+    const formCard = document.getElementById('formCard');
+    const medInfo = document.getElementById('medInfo');
+    const stockForm = document.getElementById('stockForm');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const qtyHelp = document.getElementById('qtyHelp');
+    const medicationIdInput = document.getElementById('medicationIdInput');
+    const hospitalSelect = document.getElementById('hospitalId');  // select de hospitales
+
+    // =======================
+    //  Autenticación
+    // =======================
+    function checkAuth() {
+        const token = localStorage.getItem('token');
+        const user = localStorage.getItem('user');
         
-        let currentUser = null;
-        let medicationId = null;
-        let selectedAction = 'increment';
-
-        // Elementos del DOM
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        const alertBox = document.getElementById('alert');
-        const searchBox = document.getElementById('searchBox');
-        const formCard = document.getElementById('formCard');
-        const medInfo = document.getElementById('medInfo');
-        const stockForm = document.getElementById('stockForm');
-        const btnSubmit = document.getElementById('btnSubmit');
-        const qtyHelp = document.getElementById('qtyHelp');
-        const medicationIdInput = document.getElementById('medicationIdInput');
-
-        // Función para verificar autenticación
-        function checkAuth() {
-            const token = localStorage.getItem('token');
-            const user = localStorage.getItem('user');
-            
-            if (!token || !user) {
-                window.location.href = 'login.html';
-                return null;
-            }
-
-            const loginTime = new Date(localStorage.getItem('loginTime'));
-            const now = new Date();
-            const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
-            
-            if (hoursDiff >= 8) {
-                logout();
-                return null;
-            }
-
-            currentUser = JSON.parse(user);
-
-            // Verificar permisos
-            if (!currentUser.isSuperUser && currentUser.role !== 'admin' && currentUser.role !== 'manager') {
-                showAlert('No tienes permisos para ajustar stock', 'error');
-                setTimeout(() => {
-                    window.location.href = 'medications-list.html';
-                }, 2000);
-                return null;
-            }
-
-            return token;
-        }
-
-        // Función para cerrar sesión
-        function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            localStorage.removeItem('loginTime');
+        if (!token || !user) {
             window.location.href = 'login.html';
+            return null;
         }
 
-        // Función para mostrar alertas
-        function showAlert(message, type = 'error') {
-            alertBox.textContent = message;
-            alertBox.className = `alert alert-${type} show`;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        const loginTime = new Date(localStorage.getItem('loginTime'));
+        const now = new Date();
+        const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+        
+        if (hoursDiff >= 8) {
+            logout();
+            return null;
         }
 
-        // Función para mostrar/ocultar loading
-        function toggleLoading(show) {
-            loadingOverlay.classList.toggle('show', show);
-        }
+        currentUser = JSON.parse(user);
 
-        // Función para seleccionar acción
-        function selectAction(action) {
-            selectedAction = action;
-            document.getElementById('action').value = action;
-            
-            // Actualizar botones
-            document.querySelectorAll('.action-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.querySelector(`[data-action="${action}"]`).classList.add('active');
-
-            // Actualizar texto de ayuda
-            const helpTexts = {
-                increment: 'Unidades a incrementar',
-                decrement: 'Unidades a decrementar',
-                set: 'Establecer stock total en esta cantidad'
-            };
-            qtyHelp.textContent = helpTexts[action];
-        }
-
-        // Función para cargar medicamento
-        async function loadMedication(id) {
-            const token = checkAuth();
-            if (!token) return;
-
-            toggleLoading(true);
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/medications/${id}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.ok) {
-                    displayMedicationInfo(data.data);
-                    searchBox.style.display = 'none';
-                    formCard.style.display = 'block';
-                } else {
-                    showAlert(data.message || 'Medicamento no encontrado', 'error');
-                    searchBox.style.display = 'block';
-                }
-
-            } catch (error) {
-                console.error('Error:', error);
-                showAlert('Error de conexión', 'error');
-                searchBox.style.display = 'block';
-            } finally {
-                toggleLoading(false);
-            }
-        }
-
-        // Función para mostrar info del medicamento
-        function displayMedicationInfo(med) {
-            medInfo.style.display = 'block';
-            document.getElementById('medName').textContent = med.name || 'Sin nombre';
-            document.getElementById('medCode').textContent = `Código: ${med.code || 'N/A'} | Forma: ${med.form || 'N/A'} | Concentración: ${med.strength || 'N/A'}`;
-        }
-
-        // Función de búsqueda
-        function searchMedication() {
-            const id = medicationIdInput.value.trim();
-            if (!id) {
-                showAlert('Por favor ingresa un ID de medicamento', 'error');
-                return;
-            }
-
-            const url = new URL(window.location);
-            url.searchParams.set('id', id);
-            window.history.pushState({}, '', url);
-            
-            medicationId = id;
-            loadMedication(id);
-        }
-
-        // Cancelar formulario
-        function cancelForm() {
-            if (confirm('¿Estás seguro de que deseas cancelar?')) {
+        // Verificar permisos
+        if (!currentUser.isSuperUser && currentUser.role !== 'admin' && currentUser.role !== 'manager') {
+            showAlert('No tienes permisos para ajustar stock', 'error');
+            setTimeout(() => {
                 window.location.href = 'medications-list.html';
-            }
+            }, 2000);
+            return null;
         }
 
-        // Manejar envío del formulario
-        stockForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const token = checkAuth();
-            if (!token || !medicationId) return;
+        return token;
+    }
 
-            // Construir datos
-            const formData = {
-                hospitalId: document.getElementById('hospitalId').value.trim(),
-                action: selectedAction,
-                qty: Number(document.getElementById('qty').value)
-            };
+    function logout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('loginTime');
+        window.location.href = 'login.html';
+    }
 
-            const unitCost = document.getElementById('unitCost').value;
-            const lot = document.getElementById('lot').value.trim();
-            const expiryDate = document.getElementById('expiryDate').value;
-            const reason = document.getElementById('reason').value.trim();
+    // =======================
+    //  Utilidades UI
+    // =======================
+    function showAlert(message, type = 'error') {
+        alertBox.textContent = message;
+        alertBox.className = `alert alert-${type} show`;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 
-            if (unitCost) formData.unitCost = Number(unitCost);
-            if (lot) formData.lot = lot;
-            if (expiryDate) formData.expiryDate = expiryDate;
-            if (reason) formData.reason = reason;
+    function toggleLoading(show) {
+        loadingOverlay.classList.toggle('show', show);
+    }
 
-            // Validaciones
-            if (!formData.hospitalId || !formData.qty || formData.qty <= 0) {
-                showAlert('Hospital ID y Cantidad son requeridos (cantidad > 0)', 'error');
-                return;
+    // =======================
+    //  Cargar hospitales
+    // =======================
+    async function loadHospitals() {
+    const token = localStorage.getItem('token');
+    if (!token || !hospitalSelect) return;
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/hospitals`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.ok) {
+            const hospitals = data.data || [];
+
+            // Limpiar y dejar opción por defecto
+            hospitalSelect.innerHTML = '<option value="">Selecciona un hospital...</option>';
+
+            hospitals.forEach(h => {
+                const option = document.createElement('option');
+                // 👇 AQUÍ EL CAMBIO IMPORTANTE
+                option.value = h.id || h._id;      // usa "id" (y si no, "_id")
+                option.textContent = h.name;       // Nombre visible
+                hospitalSelect.appendChild(option);
+            });
+        } else {
+            console.error('Error al cargar hospitales:', data.message);
+        }
+    } catch (err) {
+        console.error('Error de conexión al cargar hospitales:', err);
+    }
+}
+    // =======================
+    //  Acción de ajuste
+    // =======================
+    function selectAction(action) {
+        selectedAction = action;
+        document.getElementById('action').value = action;
+        
+        document.querySelectorAll('.action-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-action="${action}"]`).classList.add('active');
+
+        const helpTexts = {
+            increment: 'Unidades a incrementar',
+            decrement: 'Unidades a decrementar',
+            set: 'Establecer stock total en esta cantidad'
+        };
+        qtyHelp.textContent = helpTexts[action];
+    }
+
+    // =======================
+    //  Cargar medicamento
+    // =======================
+    async function loadMedication(id) {
+        const token = checkAuth();
+        if (!token) return;
+
+        toggleLoading(true);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/medications/${id}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.ok) {
+                displayMedicationInfo(data.data);
+                searchBox.style.display = 'none';
+                formCard.style.display = 'block';
+            } else {
+                showAlert(data.message || 'Medicamento no encontrado', 'error');
+                searchBox.style.display = 'block';
             }
 
-            btnSubmit.disabled = true;
-            btnSubmit.textContent = 'Procesando...';
-            toggleLoading(true);
-            alertBox.classList.remove('show');
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('Error de conexión', 'error');
+            searchBox.style.display = 'block';
+        } finally {
+            toggleLoading(false);
+        }
+    }
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/medications/${medicationId}/stock`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
+    function displayMedicationInfo(med) {
+        medInfo.style.display = 'block';
+        document.getElementById('medName').textContent = med.name || 'Sin nombre';
+        document.getElementById('medCode').textContent =
+            `Código: ${med.code || 'N/A'} | Forma: ${med.form || 'N/A'} | Concentración: ${med.strength || 'N/A'}`;
+    }
 
-                const data = await response.json();
+    // =======================
+    //  Búsqueda por ID
+    // =======================
+    function searchMedication() {
+        const id = medicationIdInput.value.trim();
+        if (!id) {
+            showAlert('Por favor ingresa un ID de medicamento', 'error');
+            return;
+        }
 
-                if (response.ok && data.ok) {
-                    let message = 'Stock actualizado exitosamente';
-                    
-                    if (data.data) {
-                        message += `. Stock anterior: ${data.data.before}, Stock actual: ${data.data.after}`;
-                        
-                        if (data.data.triggerReorder) {
-                            message += '. ⚠️ Se activó el punto de reorden.';
-                        }
-                    }
-                    
-                    showAlert(message, 'success');
-                    
-                    // Limpiar formulario después de 2 segundos
-                    setTimeout(() => {
-                        stockForm.reset();
-                        selectAction('increment');
-                    }, 2000);
+        const url = new URL(window.location);
+        url.searchParams.set('id', id);
+        window.history.pushState({}, '', url);
+        
+        medicationId = id;
+        loadMedication(id);
+    }
 
-                } else {
-                    const errorMessage = data.message || 'Error al ajustar stock';
+    // =======================
+    //  Cancelar
+    // =======================
+    function cancelForm() {
+        if (confirm('¿Estás seguro de que deseas cancelar?')) {
+            window.location.href = 'medications-list.html';
+        }
+    }
+
+    // =======================
+    //  Envío del formulario
+    // =======================
+    stockForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const token = checkAuth();
+        if (!token || !medicationId) return;
+
+        const hospitalIdValue = hospitalSelect.value;
+        const qtyValue = Number(document.getElementById('qty').value);
+
+        // 🔧 Validaciones (solo que no esté vacío, sin checar length)
+        if (!hospitalIdValue) {
+            showAlert('Por favor selecciona un hospital', 'error');
+            return;
+        }
+        if (!qtyValue || qtyValue <= 0) {
+            showAlert('La cantidad debe ser mayor a 0', 'error');
+            return;
+        }
+
+        const formData = {
+            hospitalId: hospitalIdValue,
+            action: selectedAction,
+            qty: qtyValue
+        };
+
+        const unitCost = document.getElementById('unitCost').value;
+        const lot = document.getElementById('lot').value.trim();
+        const expiryDate = document.getElementById('expiryDate').value;
+        const reason = document.getElementById('reason').value.trim();
+
+        if (unitCost) formData.unitCost = Number(unitCost);
+        if (lot) formData.lot = lot;
+        if (expiryDate) formData.expiryDate = expiryDate;
+        if (reason) formData.reason = reason;
+
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = 'Procesando...';
+        toggleLoading(true);
+        alertBox.classList.remove('show');
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/medications/${medicationId}/stock`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.ok) {
+                let message = 'Stock actualizado exitosamente';
+                
+                if (data.data) {
+                    message += `. Stock anterior: ${data.data.before}, Stock actual: ${data.data.after}`;
                     
-                    if (response.status === 409) {
-                        showAlert(errorMessage, 'warning');
-                    } else {
-                        showAlert(errorMessage, 'error');
+                    if (data.data.triggerReorder) {
+                        message += '. ⚠️ Se activó el punto de reorden.';
                     }
                 }
+                
+                showAlert(message, 'success');
+                
+                setTimeout(() => {
+                    stockForm.reset();
+                    selectAction('increment');
+                }, 2000);
 
-            } catch (error) {
-                console.error('Error:', error);
-                showAlert('Error de conexión. Verifica tu internet e intenta nuevamente.', 'error');
-            } finally {
-                btnSubmit.disabled = false;
-                btnSubmit.textContent = 'Ajustar Stock';
-                toggleLoading(false);
-            }
-        });
-
-        // Enter en búsqueda
-        medicationIdInput?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                searchMedication();
-            }
-        });
-
-        // Limpiar alertas al escribir
-        document.querySelectorAll('input, select, textarea').forEach(input => {
-            input.addEventListener('input', () => {
-                alertBox.classList.remove('show');
-            });
-        });
-
-        // Inicializar
-        (function init() {
-            const token = checkAuth();
-            if (!token) return;
-
-            const urlParams = new URLSearchParams(window.location.search);
-            medicationId = urlParams.get('id');
-
-            if (medicationId) {
-                loadMedication(medicationId);
             } else {
-                searchBox.style.display = 'block';
-                medicationIdInput.focus();
+                const errorMessage = data.message || 'Error al ajustar stock';
+                
+                if (response.status === 409) {
+                    showAlert(errorMessage, 'warning');
+                } else {
+                    showAlert(errorMessage, 'error');
+                }
             }
-        })();
-    </script>
+
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('Error de conexión. Verifica tu internet e intenta nuevamente.', 'error');
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = 'Ajustar Stock';
+            toggleLoading(false);
+        }
+    });
+
+    // Enter en búsqueda
+    medicationIdInput?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            searchMedication();
+        }
+    });
+
+    // Limpiar alertas al escribir
+    document.querySelectorAll('input, select, textarea').forEach(input => {
+        input.addEventListener('input', () => {
+            alertBox.classList.remove('show');
+        });
+    });
+
+    // =======================
+    //  Init
+    // =======================
+    (function init() {
+        const token = checkAuth();
+        if (!token) return;
+
+        // Cargar hospitales para el select
+        loadHospitals();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        medicationId = urlParams.get('id');
+
+        if (medicationId) {
+            loadMedication(medicationId);
+        } else {
+            searchBox.style.display = 'block';
+            medicationIdInput.focus();
+        }
+
+        // Acción por defecto
+        selectAction('increment');
+    })();
+</script>
 </body>
 </html>

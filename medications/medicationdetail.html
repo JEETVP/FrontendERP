@@ -19,12 +19,17 @@
 
         /* Navbar */
         .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #45638B 0%, #45638B 100%);
             padding: 0;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             position: sticky;
             top: 0;
             z-index: 100;
+        }
+        .navbar-logo {
+            height: 60px;
+            width: auto;
+            display: block;
         }
 
         .navbar-container {
@@ -158,7 +163,7 @@
         }
 
         .detail-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #45638B 0%, #45638B 100%);
             padding: 30px;
             color: white;
         }
@@ -309,7 +314,7 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #45638B 0%, #45638B 100%);
             color: white;
         }
 
@@ -347,7 +352,7 @@
 
         .spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border-top: 4px solid #45638B;
             border-radius: 50%;
             width: 50px;
             height: 50px;
@@ -379,7 +384,7 @@
 
         .search-input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #45638B;
             box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
         }
 
@@ -419,10 +424,11 @@
     <nav class="navbar">
         <div class="navbar-container">
             <div class="navbar-brand">
-                🏥 Sistema Hospitalario
+                <img src="imagotipo.png" alt="Sistema Hospitalario" class="navbar-logo">
             </div>
             <ul class="navbar-menu">
                 <li><a href="users-list.html">Usuarios</a></li>
+                <li><a href="hospitalslist.html">Hospitales</a></li>
                 <li><a href="medications.html" class="active">Medicamentos</a></li>
                 <li><a href="suppliers-list.html">Proveedores</a></li>
                 <li><a href="purchase-orders-list.html">Compras</a></li>
@@ -442,7 +448,7 @@
 
     <!-- Container -->
     <div class="container">
-        <a href="medications-list.html" class="back-link">
+        <a href="medicationslist.html" class="back-link">
             ← Volver a lista de medicamentos
         </a>
 
@@ -451,7 +457,7 @@
 
         <!-- Search Box (si no hay ID en URL) -->
         <div class="search-box" id="searchBox" style="display: none;">
-            <h3 style="margin-bottom: 15px; color: #333;">Buscar Medicamento por ID</h3>
+            <h3 style="margin-bottom: 15px; color: #333;">Buscar Medicamento </h3>
             <input 
                 type="text" 
                 class="search-input" 
@@ -462,7 +468,7 @@
                 🔍 Buscar
             </button>
             <p class="help-text">
-                Puedes obtener el ID desde la lista de medicamentos o desde una URL compartida
+                Puedes obtener el nombre del medicamento desde la lista de medicamentos
             </p>
         </div>
 
@@ -592,234 +598,304 @@
             </div>
         </div>
     </div>
+<script>
+    // Configuración del API
+    const API_BASE_URL = 'https://backenderp-316e.onrender.com/api';
+    
+    let currentUser = null;
+    let medicationId = null;
 
-    <script>
-        // Configuración del API
-        const API_BASE_URL = 'https://backenderp-316e.onrender.com/api';
+    // Elementos del DOM
+    const loadingOverlay   = document.getElementById('loadingOverlay');
+    const alertBox         = document.getElementById('alert');
+    const searchBox        = document.getElementById('searchBox');
+    const detailCard       = document.getElementById('detailCard');
+    const medicationIdInput = document.getElementById('medicationIdInput'); // ahora es nombre
+    const btnStock         = document.getElementById('btnStock');
+
+    // ==========================
+    //  Auth
+    // ==========================
+    function checkAuth() {
+        const token = localStorage.getItem('token');
+        const user  = localStorage.getItem('user');
         
-        let currentUser = null;
-        let medicationId = null;
-
-        // Elementos del DOM
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        const alertBox = document.getElementById('alert');
-        const searchBox = document.getElementById('searchBox');
-        const detailCard = document.getElementById('detailCard');
-        const medicationIdInput = document.getElementById('medicationIdInput');
-        const btnStock = document.getElementById('btnStock');
-
-        // Función para verificar autenticación
-        function checkAuth() {
-            const token = localStorage.getItem('token');
-            const user = localStorage.getItem('user');
-            
-            if (!token || !user) {
-                window.location.href = 'login.html';
-                return null;
-            }
-
-            const loginTime = new Date(localStorage.getItem('loginTime'));
-            const now = new Date();
-            const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
-            
-            if (hoursDiff >= 8) {
-                logout();
-                return null;
-            }
-
-            currentUser = JSON.parse(user);
-            return token;
-        }
-
-        // Función para cerrar sesión
-        function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            localStorage.removeItem('loginTime');
+        if (!token || !user) {
             window.location.href = 'login.html';
+            return null;
         }
 
-        // Función para mostrar alertas
-        function showAlert(message, type = 'error') {
-            alertBox.textContent = message;
-            alertBox.className = `alert alert-${type} show`;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        const loginTime = new Date(localStorage.getItem('loginTime'));
+        const now       = new Date();
+        const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+        
+        if (hoursDiff >= 8) {
+            logout();
+            return null;
         }
 
-        // Función para mostrar/ocultar loading
-        function toggleLoading(show) {
-            loadingOverlay.classList.toggle('show', show);
-        }
+        currentUser = JSON.parse(user);
+        return token;
+    }
 
-        // Función para formatear fecha
-        function formatDate(dateString) {
-            if (!dateString) return 'N/A';
-            const date = new Date(dateString);
-            return date.toLocaleDateString('es-MX', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
+    function logout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('loginTime');
+        window.location.href = 'login.html';
+    }
+
+    // ==========================
+    //  Utilidades UI
+    // ==========================
+    function showAlert(message, type = 'error') {
+        alertBox.textContent = message;
+        alertBox.className = `alert alert-${type} show`;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function toggleLoading(show) {
+        loadingOverlay.classList.toggle('show', show);
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-MX', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    function formatPrice(price) {
+        if (!price && price !== 0) return 'N/A';
+        return `$${Number(price).toFixed(2)} MXN`;
+    }
+
+    // ==========================
+    //  Cargar medicamento por ID (para ?id=...)
+    // ==========================
+    async function loadMedication(id) {
+        const token = checkAuth();
+        if (!token) return;
+
+        toggleLoading(true);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/medications/${id}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
             });
+
+            const data = await response.json();
+
+            if (response.ok && data.ok) {
+                displayMedication(data.data);
+            } else {
+                showAlert(data.message || 'Error al cargar el medicamento', 'error');
+                detailCard.style.display = 'none';
+                searchBox.style.display = 'block';
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('Error de conexión al cargar el medicamento', 'error');
+            detailCard.style.display = 'none';
+            searchBox.style.display = 'block';
+        } finally {
+            toggleLoading(false);
+        }
+    }
+
+    // ==========================
+    //  Mostrar medicamento
+    // ==========================
+    function displayMedication(med) {
+        searchBox.style.display  = 'none';
+        detailCard.style.display = 'block';
+
+        // Header
+        document.getElementById('medName').textContent = med.name || 'Sin nombre';
+        document.getElementById('medCode').textContent = `Código: ${med.code || 'N/A'}`;
+
+        // Badges
+        const badgesHtml = [];
+        if (med.isActive !== false) {
+            badgesHtml.push('<span class="badge badge-active">✓ Activo</span>');
+        } else {
+            badgesHtml.push('<span class="badge badge-inactive">✗ Inactivo</span>');
+        }
+        if (med.isControlled) {
+            badgesHtml.push('<span class="badge badge-controlled">🔒 Controlado</span>');
+        }
+        document.getElementById('medBadges').innerHTML = badgesHtml.join('');
+
+        // Info básica
+        document.getElementById('medForm').textContent     = med.form || 'N/A';
+        document.getElementById('medStrength').textContent = med.strength || 'N/A';
+        document.getElementById('medPack').textContent     = med.packSize ? `${med.packSize} unidades` : 'N/A';
+        document.getElementById('medUom').textContent      = med.uom || 'unit';
+
+        // Precio
+        document.getElementById('medPrice').textContent = formatPrice(med.unitPrice);
+        document.getElementById('medSku').textContent   = med.sku || 'N/A';
+
+        // Códigos
+        if (med.atcCode || (med.barcodes && med.barcodes.length > 0)) {
+            document.getElementById('codesSection').style.display = 'block';
+            document.getElementById('medAtc').textContent = med.atcCode || 'N/A';
+            
+            if (med.barcodes && med.barcodes.length > 0) {
+                document.getElementById('barcodesItem').style.display = 'block';
+                const barcodesHtml = med.barcodes
+                    .map(bc => `<span class="barcode-item">${bc}</span>`)
+                    .join('');
+                document.getElementById('medBarcodes').innerHTML = barcodesHtml;
+            }
         }
 
-        // Función para formatear precio
-        function formatPrice(price) {
-            if (!price && price !== 0) return 'N/A';
-            return `$${Number(price).toFixed(2)} MXN`;
+        // Políticas
+        if (med.policy || med.preferredSupplier) {
+            document.getElementById('policySection').style.display = 'block';
+            document.getElementById('medReorder').textContent     = med.policy?.reorderPoint || 'No definido';
+            document.getElementById('medSafety').textContent      = med.policy?.safetyStock || 'No definido';
+            document.getElementById('medConsumption').textContent = med.policy?.avgMonthlyConsumption || 'No definido';
+            document.getElementById('medSupplier').textContent    = med.preferredSupplier || 'No asignado';
         }
 
-        // Función para cargar medicamento
-        async function loadMedication(id) {
-            const token = checkAuth();
-            if (!token) return;
+        // Almacenamiento (tu schema tiene temperatureMinC / temperatureMaxC;
+        // si solo guardas "temperature", mantenemos esto como está)
+        if (med.storage) {
+            document.getElementById('storageSection').style.display = 'block';
+            document.getElementById('medTemp').textContent       = med.storage.temperature || 'No especificado';
+            document.getElementById('medConditions').textContent = med.storage.conditions || 'No especificadas';
+        }
 
-            toggleLoading(true);
+        // Info sistema
+        document.getElementById('medId').textContent      = med._id;
+        document.getElementById('medCreated').textContent = formatDate(med.createdAt);
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/medications/${id}`, {
+        // Link a pantalla de stock
+        btnStock.href = `medication-stock.html?id=${med._id}`;
+
+        // Permisos stock
+        const hasPermission =
+            currentUser.isSuperUser ||
+            currentUser.role === 'admin' ||
+            currentUser.role === 'manager';
+
+        if (!hasPermission) {
+            btnStock.style.display = 'none';
+        }
+    }
+
+    // ==========================
+    //  Búsqueda por nombre (nuevo endpoint)
+    // ==========================
+    async function searchMedication() {
+        const term = medicationIdInput.value.trim(); // ahora es nombre, no ID
+
+        if (!term) {
+            showAlert('Por favor ingresa el nombre del medicamento', 'error');
+            return;
+        }
+
+        const token = checkAuth();
+        if (!token) return;
+
+        toggleLoading(true);
+
+        try {
+            const params = new URLSearchParams({
+                q: term,
+                page: 1,
+                limit: 10
+            });
+
+            const response = await fetch(
+                `${API_BASE_URL}/medications/search/by-name?${params.toString()}`,
+                {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
-                });
+                }
+            );
 
-                const data = await response.json();
+            const data = await response.json();
 
-                if (response.ok && data.ok) {
-                    displayMedication(data.data);
-                } else {
-                    showAlert(data.message || 'Error al cargar el medicamento', 'error');
-                    searchBox.style.display = 'block';
+            if (response.ok && data.ok) {
+                const results = data.data || [];
+
+                if (results.length === 0) {
+                    detailCard.style.display = 'none';
+                    searchBox.style.display  = 'block';
+                    showAlert('No se encontraron medicamentos con ese nombre', 'error');
+                    return;
                 }
 
-            } catch (error) {
-                console.error('Error:', error);
-                showAlert('Error de conexión al cargar el medicamento', 'error');
-                searchBox.style.display = 'block';
-            } finally {
-                toggleLoading(false);
-            }
-        }
-
-        // Función para mostrar medicamento
-        function displayMedication(med) {
-            searchBox.style.display = 'none';
-            detailCard.style.display = 'block';
-
-            // Header
-            document.getElementById('medName').textContent = med.name || 'Sin nombre';
-            document.getElementById('medCode').textContent = `Código: ${med.code || 'N/A'}`;
-
-            // Badges
-            const badgesHtml = [];
-            if (med.isActive !== false) {
-                badgesHtml.push('<span class="badge badge-active">✓ Activo</span>');
-            } else {
-                badgesHtml.push('<span class="badge badge-inactive">✗ Inactivo</span>');
-            }
-            if (med.isControlled) {
-                badgesHtml.push('<span class="badge badge-controlled">🔒 Controlado</span>');
-            }
-            document.getElementById('medBadges').innerHTML = badgesHtml.join('');
-
-            // Información básica
-            document.getElementById('medForm').textContent = med.form || 'N/A';
-            document.getElementById('medStrength').textContent = med.strength || 'N/A';
-            document.getElementById('medPack').textContent = med.packSize ? `${med.packSize} unidades` : 'N/A';
-            document.getElementById('medUom').textContent = med.uom || 'unit';
-
-            // Precio
-            document.getElementById('medPrice').textContent = formatPrice(med.unitPrice);
-            document.getElementById('medSku').textContent = med.sku || 'N/A';
-
-            // Códigos
-            if (med.atcCode || (med.barcodes && med.barcodes.length > 0)) {
-                document.getElementById('codesSection').style.display = 'block';
-                document.getElementById('medAtc').textContent = med.atcCode || 'N/A';
-                
-                if (med.barcodes && med.barcodes.length > 0) {
-                    document.getElementById('barcodesItem').style.display = 'block';
-                    const barcodesHtml = med.barcodes.map(bc => 
-                        `<span class="barcode-item">${bc}</span>`
-                    ).join('');
-                    document.getElementById('medBarcodes').innerHTML = barcodesHtml;
+                if (results.length > 1) {
+                    // Por ahora tomamos el primero y avisamos
+                    showAlert(`Se encontraron ${results.length} resultados, mostrando el primero.`, 'success');
                 }
-            }
 
-            // Políticas
-            if (med.policy || med.preferredSupplier) {
-                document.getElementById('policySection').style.display = 'block';
-                document.getElementById('medReorder').textContent = med.policy?.reorderPoint || 'No definido';
-                document.getElementById('medSafety').textContent = med.policy?.safetyStock || 'No definido';
-                document.getElementById('medConsumption').textContent = med.policy?.avgMonthlyConsumption || 'No definido';
-                document.getElementById('medSupplier').textContent = med.preferredSupplier || 'No asignado';
-            }
+                const med = results[0];
 
-            // Almacenamiento
-            if (med.storage) {
-                document.getElementById('storageSection').style.display = 'block';
-                document.getElementById('medTemp').textContent = med.storage.temperature || 'No especificado';
-                document.getElementById('medConditions').textContent = med.storage.conditions || 'No especificadas';
-            }
+                // Actualizar URL con el ID real del medicamento
+                const url = new URL(window.location);
+                url.searchParams.set('id', med._id);
+                window.history.pushState({}, '', url);
 
-            // Información del sistema
-            document.getElementById('medId').textContent = med._id;
-            document.getElementById('medCreated').textContent = formatDate(med.createdAt);
-
-            // Actualizar link de stock
-            btnStock.href = `medication-stock.html?id=${med._id}`;
-
-            // Verificar permisos para ajustar stock
-            const hasPermission = currentUser.isSuperUser || 
-                                 currentUser.role === 'admin' || 
-                                 currentUser.role === 'manager';
-            if (!hasPermission) {
-                btnStock.style.display = 'none';
-            }
-        }
-
-        // Función de búsqueda
-        function searchMedication() {
-            const id = medicationIdInput.value.trim();
-            if (!id) {
-                showAlert('Por favor ingresa un ID de medicamento', 'error');
-                return;
-            }
-
-            // Actualizar URL y cargar
-            const url = new URL(window.location);
-            url.searchParams.set('id', id);
-            window.history.pushState({}, '', url);
-            
-            loadMedication(id);
-        }
-
-        // Enter en campo de búsqueda
-        medicationIdInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                searchMedication();
-            }
-        });
-
-        // Inicializar
-        (function init() {
-            const token = checkAuth();
-            if (!token) return;
-
-            // Obtener ID de la URL
-            const urlParams = new URLSearchParams(window.location.search);
-            medicationId = urlParams.get('id');
-
-            if (medicationId) {
-                loadMedication(medicationId);
+                displayMedication(med);
             } else {
-                searchBox.style.display = 'block';
-                medicationIdInput.focus();
+                detailCard.style.display = 'none';
+                searchBox.style.display  = 'block';
+                showAlert(data.message || 'Error al buscar el medicamento', 'error');
             }
-        })();
-    </script>
+        } catch (error) {
+            console.error('Error:', error);
+            detailCard.style.display = 'none';
+            searchBox.style.display  = 'block';
+            showAlert('Error de conexión al buscar el medicamento', 'error');
+        } finally {
+            toggleLoading(false);
+        }
+    }
+
+    // Enter en campo de búsqueda
+    medicationIdInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            searchMedication();
+        }
+    });
+
+    // ==========================
+    //  Init
+    // ==========================
+    (function init() {
+        const token = checkAuth();
+        if (!token) return;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        medicationId = urlParams.get('id');
+
+        if (medicationId) {
+            // Si viene con ?id=... seguimos permitiendo abrir por ID directo
+            loadMedication(medicationId);
+        } else {
+            // Flujo normal: buscar por nombre
+            detailCard.style.display = 'none';
+            searchBox.style.display  = 'block';
+            medicationIdInput.focus();
+        }
+    })();
+</script>
 </body>
 </html>

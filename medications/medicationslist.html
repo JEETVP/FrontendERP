@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Usuarios - Sistema Hospitalario</title>
+    <title>Lista de Medicamentos - Sistema Hospitalario</title>
     <style>
         * {
             margin: 0;
@@ -19,12 +19,17 @@
 
         /* Navbar */
         .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #45638B 0%, #45638B 100%);
             padding: 0;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             position: sticky;
             top: 0;
             z-index: 100;
+        }
+
+        .navbar-brand img {
+            height: 60px; /* súbele a 60 u 80 si quieres más grande */
+            width: auto;
         }
 
         .navbar-container {
@@ -115,6 +120,23 @@
             padding: 0 20px;
         }
 
+        /* Back link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            transition: gap 0.3s ease;
+        }
+
+        .back-link:hover {
+            gap: 12px;
+        }
+
         /* Header */
         .page-header {
             background: white;
@@ -134,7 +156,7 @@
         }
 
         .btn-add {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #45638B 0%, #45638B 100%);
             color: white;
             border: none;
             padding: 12px 24px;
@@ -146,6 +168,7 @@
             align-items: center;
             gap: 8px;
             transition: all 0.3s ease;
+            text-decoration: none;
         }
 
         .btn-add:hover {
@@ -183,6 +206,12 @@
             box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
         }
 
+        .search-help {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+        }
+
         /* Table */
         .table-container {
             background: white;
@@ -213,6 +242,7 @@
         tbody tr {
             border-bottom: 1px solid #f0f0f0;
             transition: background 0.2s ease;
+            cursor: pointer;
         }
 
         tbody tr:hover {
@@ -225,6 +255,17 @@
             font-size: 14px;
         }
 
+        .med-name {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .med-code {
+            color: #999;
+            font-size: 12px;
+            font-family: monospace;
+        }
+
         /* Badges */
         .badge {
             display: inline-block;
@@ -232,32 +273,6 @@
             border-radius: 20px;
             font-size: 12px;
             font-weight: 600;
-            text-transform: capitalize;
-        }
-
-        .badge-superuser {
-            background: #ffd700;
-            color: #856404;
-        }
-
-        .badge-admin {
-            background: #e3f2fd;
-            color: #1976d2;
-        }
-
-        .badge-manager {
-            background: #f3e5f5;
-            color: #7b1fa2;
-        }
-
-        .badge-pharmacist {
-            background: #e8f5e9;
-            color: #388e3c;
-        }
-
-        .badge-clerk {
-            background: #fbe9e7;
-            color: #d84315;
         }
 
         .badge-active {
@@ -265,14 +280,20 @@
             color: #2e7d32;
         }
 
-        .badge-blocked {
+        .badge-inactive {
             background: #ffebee;
             color: #c62828;
         }
 
-        .badge-inactive {
-            background: #f5f5f5;
-            color: #757575;
+        .badge-controlled {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-price {
+            background: #e3f2fd;
+            color: #1976d2;
+            font-family: monospace;
         }
 
         /* Loading */
@@ -295,7 +316,7 @@
 
         .spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border-top: 4px solid #45638B;
             border-radius: 50%;
             width: 50px;
             height: 50px;
@@ -389,7 +410,7 @@
             }
 
             table {
-                min-width: 800px;
+                min-width: 900px;
             }
         }
     </style>
@@ -399,15 +420,16 @@
     <nav class="navbar">
         <div class="navbar-container">
             <div class="navbar-brand">
-                🏥 Sistema Hospitalario
+                <img src="imagotipo.png" alt="Optima Consulting">
             </div>
             <ul class="navbar-menu">
-                <li><a href="users-list.html" class="active">Usuarios</a></li>
-                <li><a href="medications-list.html">Medicamentos</a></li>
-                <li><a href="suppliers-list.html">Proveedores</a></li>
-                <li><a href="purchase-orders-list.html">Compras</a></li>
-                <li><a href="inventory-transactions-list.html">Inventario</a></li>
-                <li><a href="notifications-list.html">Notificaciones</a></li>
+                <li><a href="userslist.html">Usuarios</a></li>
+                <li><a href="hospitalslist.html">Hospitales</a></li>
+                <li><a href="medications.html" class="active">Medicamentos</a></li>
+                <li><a href="supplierslist.html">Proveedores</a></li>
+                <li><a href="purchaseorderslist.html">Compras</a></li>
+                <li><a href="inventorytransactionslist.html">Inventario</a></li>
+                <li><a href="notificationslist.html">Notificaciones</a></li>
             </ul>
             <div class="navbar-user">
                 <div class="user-info">
@@ -426,16 +448,20 @@
 
     <!-- Container -->
     <div class="container">
+        <a href="medications.html" class="back-link">
+            ← Volver al menú de medicamentos
+        </a>
+
         <!-- Alert -->
         <div id="alert" class="alert"></div>
 
         <!-- Page Header -->
         <div class="page-header">
-            <h1 class="page-title">Gestión de Usuarios</h1>
-            <button class="btn-add" onclick="addUser()">
+            <h1 class="page-title">Catálogo de Medicamentos</h1>
+            <a href="medicationcreate.html" class="btn-add" id="btnAdd">
                 <span>➕</span>
-                <span>Nuevo Usuario</span>
-            </button>
+                <span>Nuevo Medicamento</span>
+            </a>
         </div>
 
         <!-- Filters -->
@@ -445,35 +471,38 @@
                     type="text" 
                     class="search-input" 
                     id="searchInput"
-                    placeholder="🔍 Buscar por nombre, email o rol..."
+                    placeholder="🔍 Buscar por nombre, código o concentración..."
                 >
+            </div>
+            <div class="search-help">
+                La búsqueda se realiza automáticamente mientras escribes
             </div>
         </div>
 
         <!-- Table -->
         <div class="table-container">
-            <table id="usersTable">
+            <table id="medicationsTable">
                 <thead>
                     <tr>
-                        <th>Nombre</th>
-                        <th>Email</th>
-                        <th>Rol</th>
+                        <th>Medicamento</th>
+                        <th>Forma</th>
+                        <th>Concentración</th>
+                        <th>Presentación</th>
+                        <th>Precio Unitario</th>
                         <th>Estado</th>
-                        <th>Hospital</th>
-                        <th>Último Acceso</th>
-                        <th>Fecha Creación</th>
+                        <th>Tipo</th>
                     </tr>
                 </thead>
-                <tbody id="usersTableBody">
+                <tbody id="medsTableBody">
                     <!-- Datos cargados dinámicamente -->
                 </tbody>
             </table>
             
             <!-- Empty State -->
             <div id="emptyState" class="empty-state" style="display: none;">
-                <div class="empty-state-icon">👥</div>
-                <div class="empty-state-title">No hay usuarios registrados</div>
-                <div class="empty-state-text">Comienza agregando un nuevo usuario</div>
+                <div class="empty-state-icon">💊</div>
+                <div class="empty-state-title">No se encontraron medicamentos</div>
+                <div class="empty-state-text">Intenta con otros términos de búsqueda o crea uno nuevo</div>
             </div>
         </div>
     </div>
@@ -483,17 +512,19 @@
         const API_BASE_URL = 'https://backenderp-316e.onrender.com/api';
         
         // Variables globales
-        let allUsers = [];
+        let allMedications = [];
         let currentUser = null;
+        let searchTimeout = null;
 
         // Elementos del DOM
         const loadingOverlay = document.getElementById('loadingOverlay');
         const alertBox = document.getElementById('alert');
-        const usersTableBody = document.getElementById('usersTableBody');
+        const medsTableBody = document.getElementById('medsTableBody');
         const emptyState = document.getElementById('emptyState');
         const searchInput = document.getElementById('searchInput');
         const userName = document.getElementById('userName');
         const userRole = document.getElementById('userRole');
+        const btnAdd = document.getElementById('btnAdd');
 
         // Función para verificar autenticación
         function checkAuth() {
@@ -516,16 +547,6 @@
             }
 
             currentUser = JSON.parse(user);
-            
-            // Verificar que sea admin
-            if (currentUser.role !== 'admin' && !currentUser.isSuperUser) {
-                showAlert('No tienes permisos para acceder a esta página', 'error');
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 2000);
-                return null;
-            }
-
             return token;
         }
 
@@ -556,133 +577,11 @@
             }
         }
 
-        // Función para formatear fecha
-        function formatDate(dateString) {
-            if (!dateString) return 'N/A';
-            const date = new Date(dateString);
-            return date.toLocaleDateString('es-MX', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+        // Función para formatear precio
+        function formatPrice(price) {
+            if (!price && price !== 0) return 'N/A';
+            return `$${Number(price).toFixed(2)}`;
         }
-
-        // Función para obtener badge de rol
-        function getRoleBadge(role, isSuperUser) {
-            if (isSuperUser) {
-                return '<span class="badge badge-superuser">⭐ SuperUser</span>';
-            }
-            
-            const badges = {
-                admin: '<span class="badge badge-admin">Admin</span>',
-                manager: '<span class="badge badge-manager">Manager</span>',
-                pharmacist: '<span class="badge badge-pharmacist">Farmacéutico</span>',
-                clerk: '<span class="badge badge-clerk">Auxiliar</span>'
-            };
-            
-            return badges[role] || `<span class="badge badge-clerk">${role}</span>`;
-        }
-
-        // Función para obtener badge de estado
-        function getStatusBadge(status) {
-            const badges = {
-                active: '<span class="badge badge-active">✓ Activo</span>',
-                blocked: '<span class="badge badge-blocked">✗ Bloqueado</span>',
-                inactive: '<span class="badge badge-inactive">○ Inactivo</span>'
-            };
-            
-            return badges[status] || '<span class="badge badge-active">Activo</span>';
-        }
-
-        // Función para cargar usuarios
-        async function loadUsers() {
-            const token = checkAuth();
-            if (!token) return;
-
-            toggleLoading(true);
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/auth/users`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.ok) {
-                    allUsers = data.data || [];
-                    renderUsers(allUsers);
-                } else {
-                    showAlert(data.message || 'Error al cargar usuarios', 'error');
-                }
-
-            } catch (error) {
-                console.error('Error:', error);
-                showAlert('Error de conexión al cargar usuarios', 'error');
-            } finally {
-                toggleLoading(false);
-            }
-        }
-
-        // Función para renderizar usuarios
-        function renderUsers(users) {
-            usersTableBody.innerHTML = '';
-
-            if (!users || users.length === 0) {
-                emptyState.style.display = 'block';
-                return;
-            }
-
-            emptyState.style.display = 'none';
-
-            users.forEach(user => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td><strong>${user.name || 'N/A'}</strong></td>
-                    <td>${user.email || 'N/A'}</td>
-                    <td>${getRoleBadge(user.role, user.isSuperUser)}</td>
-                    <td>${getStatusBadge(user.status)}</td>
-                    <td>${user.hospital?.name || user.hospital || 'N/A'}</td>
-                    <td>${formatDate(user.lastLoginAt)}</td>
-                    <td>${formatDate(user.createdAt)}</td>
-                `;
-                usersTableBody.appendChild(row);
-            });
-        }
-
-        // Función de búsqueda/filtrado
-        function filterUsers(searchTerm) {
-            if (!searchTerm.trim()) {
-                renderUsers(allUsers);
-                return;
-            }
-
-            const filtered = allUsers.filter(user => {
-                const search = searchTerm.toLowerCase();
-                return (
-                    (user.name && user.name.toLowerCase().includes(search)) ||
-                    (user.email && user.email.toLowerCase().includes(search)) ||
-                    (user.role && user.role.toLowerCase().includes(search))
-                );
-            });
-
-            renderUsers(filtered);
-        }
-
-        // Función para agregar usuario
-        function addUser() {
-            window.location.href = 'user-register.html';
-        }
-
-        // Event listeners
-        searchInput.addEventListener('input', (e) => {
-            filterUsers(e.target.value);
-        });
 
         // Mostrar información del usuario en navbar
         function updateNavbarUser() {
@@ -694,12 +593,112 @@
             }
         }
 
-        // Verificar si se regresa desde registro exitoso
+        // Verificar permisos para crear
+        function checkPermissions() {
+            const hasPermission = currentUser.isSuperUser || 
+                                 currentUser.role === 'admin' || 
+                                 currentUser.role === 'manager';
+            
+            if (!hasPermission) {
+                btnAdd.style.display = 'none';
+            }
+        }
+
+        // Función para cargar medicamentos
+        async function loadMedications(searchQuery = '') {
+            const token = checkAuth();
+            if (!token) return;
+
+            toggleLoading(true);
+
+            try {
+                const url = searchQuery 
+                    ? `${API_BASE_URL}/medications?q=${encodeURIComponent(searchQuery)}`
+                    : `${API_BASE_URL}/medications`;
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.ok) {
+                    allMedications = data.data || [];
+                    renderMedications(allMedications);
+                } else {
+                    showAlert(data.message || 'Error al cargar medicamentos', 'error');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error de conexión al cargar medicamentos', 'error');
+            } finally {
+                toggleLoading(false);
+            }
+        }
+
+        // Función para renderizar medicamentos
+        function renderMedications(medications) {
+            medsTableBody.innerHTML = '';
+
+            if (!medications || medications.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            medications.forEach(med => {
+                const row = document.createElement('tr');
+                row.onclick = () => viewMedication(med._id);
+                
+                const isActive = med.isActive !== false;
+                const statusBadge = isActive 
+                    ? '<span class="badge badge-active">✓ Activo</span>'
+                    : '<span class="badge badge-inactive">✗ Inactivo</span>';
+                
+                const controlledBadge = med.isControlled 
+                    ? '<span class="badge badge-controlled">🔒 Controlado</span>'
+                    : '';
+
+                row.innerHTML = `
+                    <td>
+                        <div class="med-name">${med.name || 'N/A'}</div>
+                        <div class="med-code">${med.code || 'Sin código'}</div>
+                    </td>
+                    <td>${med.form || 'N/A'}</td>
+                    <td>${med.strength || 'N/A'}</td>
+                    <td>${med.packSize ? `${med.packSize} ${med.uom || 'unidades'}` : 'N/A'}</td>
+                    <td><span class="badge badge-price">${formatPrice(med.unitPrice)}</span></td>
+                    <td>${statusBadge}</td>
+                    <td>${controlledBadge || '-'}</td>
+                `;
+                medsTableBody.appendChild(row);
+            });
+        }
+
+        // Función para ver detalles de un medicamento
+        function viewMedication(id) {
+            window.location.href = `medication-detail.html?id=${id}`;
+        }
+
+        // Búsqueda con debounce
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                loadMedications(e.target.value.trim());
+            }, 500);
+        });
+
+        // Verificar si se regresa desde creación exitosa
         window.addEventListener('load', () => {
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('registered') === 'true') {
-                showAlert('Usuario registrado exitosamente', 'success');
-                // Limpiar URL
+            if (urlParams.get('created') === 'true') {
+                showAlert('Medicamento creado exitosamente', 'success');
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         });
@@ -709,7 +708,8 @@
             const token = checkAuth();
             if (token) {
                 updateNavbarUser();
-                loadUsers();
+                checkPermissions();
+                loadMedications();
             }
         })();
     </script>

@@ -13,7 +13,8 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            /* Fondo con el color corporativo */
+            background: linear-gradient(135deg, #456e8b 0%, #456e8b 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -43,10 +44,20 @@
         }
 
         .login-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            /* Header con el mismo color corporativo */
+            background: linear-gradient(135deg, #456e8b 0%, #456e8b 100%);
             padding: 40px 30px;
             text-align: center;
             color: white;
+        }
+
+        .login-header .logo {
+            margin-bottom: 12px;
+        }
+
+        .login-header .logo img {
+            height: 80px;
+            width: auto;
         }
 
         .login-header h1 {
@@ -87,8 +98,8 @@
         }
 
         .form-group input:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            border-color: #456e8b;
+            box-shadow: 0 0 0 4px rgba(69, 110, 139, 0.2);
         }
 
         .form-group input::placeholder {
@@ -98,7 +109,7 @@
         .btn-login {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #456e8b 0%, #456e8b 100%);
             color: white;
             border: none;
             border-radius: 10px;
@@ -111,7 +122,7 @@
 
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 10px 20px rgba(69, 110, 139, 0.4);
         }
 
         .btn-login:active {
@@ -172,7 +183,7 @@
 
         .spinner {
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            border-top: 3px solid #456e8b;
             border-radius: 50%;
             width: 30px;
             height: 30px;
@@ -205,7 +216,7 @@
         }
 
         .toggle-icon:hover {
-            color: #667eea;
+            color: #456e8b;
         }
 
         .login-footer {
@@ -233,8 +244,10 @@
 <body>
     <div class="login-container">
         <div class="login-header">
-            <h1>🏥 Sistema Hospitalario</h1>
-            <p>Gestión de Inventario y Medicamentos</p>
+            <div class="logo">
+                <img src="imagotipo.png" alt="Optima Consulting">
+            </div>
+            <p>Sistema de Gestión de Inventario y Medicamentos</p>
         </div>
         
         <div class="login-body">
@@ -279,7 +292,7 @@
         </div>
         
         <div class="login-footer">
-            <p>&copy; 2025 Sistema de Inventario Hospitalario</p>
+            <p>&copy; 2025 Optima Consulting</p>
         </div>
     </div>
 
@@ -391,7 +404,7 @@
                     
                     // Redirigir al dashboard después de 1 segundo
                     setTimeout(() => {
-                        window.location.href = 'dashboard.html';
+                        window.location.href = 'userslist.html';
                     }, 1000);
                     
                 } else {

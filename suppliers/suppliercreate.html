@@ -19,12 +19,18 @@
 
         /* Navbar */
         .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #45638B 0%, #45638B 100%);
             padding: 0;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             position: sticky;
             top: 0;
             z-index: 100;
+        }
+
+        .navbar-logo {
+            height: 60px;
+            width: auto;
+            display: block;
         }
 
         .navbar-container {
@@ -249,7 +255,7 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #45638B 0%, #45638B 100%);
             color: white;
         }
 
@@ -329,7 +335,7 @@
 
         .spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border-top: 4px solid #45638B;
             border-radius: 50%;
             width: 50px;
             height: 50px;
@@ -370,10 +376,11 @@
     <nav class="navbar">
         <div class="navbar-container">
             <div class="navbar-brand">
-                🏥 Sistema Hospitalario
+                <img src="imagotipo.png" alt="Sistema Hospitalario" class="navbar-logo">
             </div>
             <ul class="navbar-menu">
                 <li><a href="users-list.html">Usuarios</a></li>
+                <li><a href="hospitalslist.html">Hospitales</a></li>
                 <li><a href="medications.html">Medicamentos</a></li>
                 <li><a href="suppliers.html" class="active">Proveedores</a></li>
                 <li><a href="purchase-orders-list.html">Compras</a></li>
@@ -669,7 +676,11 @@
         // Función auxiliar para parsear arrays de texto
         function parseTextToArray(text) {
             if (!text || !text.trim()) return undefined;
-            return text.split(',').map(item => item.trim()).filter(item => item);
+            const arr = text
+                .split(',')
+                .map(item => item.trim())
+                .filter(item => item);
+            return arr.length ? arr : undefined;
         }
 
         // Manejar envío del formulario
@@ -684,29 +695,75 @@
                 name: document.getElementById('name').value.trim()
             };
 
-            // Campos opcionales
+            // Campos opcionales (crudos del formulario)
             const rfc = document.getElementById('rfc').value.trim();
             const leadTimeDays = document.getElementById('leadTimeDays').value;
             const emails = parseTextToArray(document.getElementById('emails').value);
             const phones = parseTextToArray(document.getElementById('phones').value);
-            const contacts = parseTextToArray(document.getElementById('contacts').value);
-            const address = document.getElementById('address').value.trim();
-            const paymentTerms = document.getElementById('paymentTerms').value.trim();
+            const contactsInput = document.getElementById('contacts').value;
+            const addressText = document.getElementById('address').value.trim();
             const defaultCurrency = document.getElementById('defaultCurrency').value;
+            const paymentTermsText = document.getElementById('paymentTerms').value.trim();
             const preferredIncoterm = document.getElementById('preferredIncoterm').value;
-            const bankAccounts = parseTextToArray(document.getElementById('bankAccounts').value);
+            const bankAccountsInput = document.getElementById('bankAccounts').value;
             const notes = document.getElementById('notes').value.trim();
 
+            // RFC
             if (rfc) formData.rfc = rfc.toUpperCase();
+
+            // Tiempo de entrega
             if (leadTimeDays) formData.leadTimeDays = Number(leadTimeDays);
+
+            // Emails y teléfonos (arrays de string)
             if (emails) formData.emails = emails;
             if (phones) formData.phones = phones;
-            if (contacts) formData.contacts = contacts;
-            if (address) formData.address = address;
-            if (paymentTerms) formData.paymentTerms = paymentTerms;
+
+            // Contacts: array de subdocumentos { name }
+            const contactNames = parseTextToArray(contactsInput);
+            if (contactNames) {
+                formData.contacts = contactNames.map(name => ({
+                    name: name
+                }));
+            }
+
+            // Address: objeto addressSchema
+            if (addressText) {
+                formData.address = {
+                    line1: addressText
+                    // Si después quieres, puedes parsear la cadena por comas y llenar más campos
+                    // line2, city, state, zip, etc.
+                };
+            }
+
+            // PaymentTerms: objeto paymentTermsSchema
+            if (paymentTermsText) {
+                // intentar extraer los días de la cadena, ej. "30 días"
+                const daysMatch = paymentTermsText.match(/\d+/);
+                const days = daysMatch ? Number(daysMatch[0]) : 30;
+
+                formData.paymentTerms = {
+                    method: 'transfer',
+                    days: isNaN(days) ? 30 : days,
+                    creditLimit: 0,
+                    currency: defaultCurrency || 'MXN'
+                };
+            }
+
+            // Moneda predeterminada
             if (defaultCurrency) formData.defaultCurrency = defaultCurrency;
+
+            // Incoterm preferido
             if (preferredIncoterm) formData.preferredIncoterm = preferredIncoterm;
-            if (bankAccounts) formData.bankAccounts = bankAccounts;
+
+            // BankAccounts: array de subdocumentos { accountNumber }
+            const bankAccountsArray = parseTextToArray(bankAccountsInput);
+            if (bankAccountsArray) {
+                formData.bankAccounts = bankAccountsArray.map(acc => ({
+                    accountNumber: acc
+                }));
+            }
+
+            // Notas
             if (notes) formData.notes = notes;
 
             // Validaciones

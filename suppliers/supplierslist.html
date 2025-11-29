@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Medicamentos - Sistema Hospitalario</title>
+    <title>Lista de Proveedores - Sistema Hospitalario</title>
     <style>
         * {
             margin: 0;
@@ -34,6 +34,12 @@
             justify-content: space-between;
             align-items: center;
             padding: 0 20px;
+        }
+
+        .navbar-logo {
+            height: 60px;
+            width: auto;
+            display: block;
         }
 
         .navbar-brand {
@@ -250,18 +256,28 @@
             font-size: 14px;
         }
 
-        .med-name {
+        .supplier-name {
             font-weight: 600;
             color: #667eea;
         }
 
-        .med-code {
+        .supplier-rfc {
             color: #999;
             font-size: 12px;
             font-family: monospace;
         }
 
-        /* Badges */
+        .contact-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .contact-item {
+            font-size: 13px;
+            color: #666;
+        }
+
         .badge {
             display: inline-block;
             padding: 5px 12px;
@@ -270,25 +286,14 @@
             font-weight: 600;
         }
 
-        .badge-active {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-
-        .badge-inactive {
-            background: #ffebee;
-            color: #c62828;
-        }
-
-        .badge-controlled {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .badge-price {
+        .badge-leadtime {
             background: #e3f2fd;
             color: #1976d2;
-            font-family: monospace;
+        }
+
+        .badge-currency {
+            background: #f3e5f5;
+            color: #7b1fa2;
         }
 
         /* Loading */
@@ -415,15 +420,16 @@
     <nav class="navbar">
         <div class="navbar-container">
             <div class="navbar-brand">
-                🏥 Sistema Hospitalario
+                <img src="imagotipo.png" alt="Sistema Hospitalario" class="navbar-logo">
             </div>
             <ul class="navbar-menu">
-                <li><a href="users-list.html">Usuarios</a></li>
-                <li><a href="medications.html" class="active">Medicamentos</a></li>
-                <li><a href="suppliers-list.html">Proveedores</a></li>
-                <li><a href="purchase-orders-list.html">Compras</a></li>
-                <li><a href="inventory-transactions-list.html">Inventario</a></li>
-                <li><a href="notifications-list.html">Notificaciones</a></li>
+                <li><a href="userslist.html">Usuarios</a></li>
+                <li><a href="hospitalslist.html">Hospitales</a></li>
+                <li><a href="medicationslist.html">Medicamentos</a></li>
+                <li><a href="supplierslist.html" class="active">Proveedores</a></li>
+                <li><a href="purchaseorderlist.html">Compras</a></li>
+                <li><a href="inventorytransactionslist.html">Inventario</a></li>
+                <li><a href="notificationslist.html">Notificaciones</a></li>
             </ul>
             <div class="navbar-user">
                 <div class="user-info">
@@ -442,8 +448,8 @@
 
     <!-- Container -->
     <div class="container">
-        <a href="medications.html" class="back-link">
-            ← Volver al menú de medicamentos
+        <a href="suppliers.html" class="back-link">
+            ← Volver al menú de proveedores
         </a>
 
         <!-- Alert -->
@@ -451,10 +457,10 @@
 
         <!-- Page Header -->
         <div class="page-header">
-            <h1 class="page-title">Catálogo de Medicamentos</h1>
-            <a href="medication-create.html" class="btn-add" id="btnAdd">
+            <h1 class="page-title">Directorio de Proveedores</h1>
+            <a href="supplier-create.html" class="btn-add" id="btnAdd">
                 <span>➕</span>
-                <span>Nuevo Medicamento</span>
+                <span>Nuevo Proveedor</span>
             </a>
         </div>
 
@@ -465,7 +471,7 @@
                     type="text" 
                     class="search-input" 
                     id="searchInput"
-                    placeholder="🔍 Buscar por nombre, código o concentración..."
+                    placeholder="🔍 Buscar por nombre, RFC o correo electrónico..."
                 >
             </div>
             <div class="search-help">
@@ -475,27 +481,25 @@
 
         <!-- Table -->
         <div class="table-container">
-            <table id="medicationsTable">
+            <table id="suppliersTable">
                 <thead>
                     <tr>
-                        <th>Medicamento</th>
-                        <th>Forma</th>
-                        <th>Concentración</th>
-                        <th>Presentación</th>
-                        <th>Precio Unitario</th>
-                        <th>Estado</th>
-                        <th>Tipo</th>
+                        <th>Proveedor</th>
+                        <th>Contacto</th>
+                        <th>Términos de Pago</th>
+                        <th>Tiempo de Entrega</th>
+                        <th>Moneda</th>
                     </tr>
                 </thead>
-                <tbody id="medsTableBody">
+                <tbody id="suppliersTableBody">
                     <!-- Datos cargados dinámicamente -->
                 </tbody>
             </table>
             
             <!-- Empty State -->
             <div id="emptyState" class="empty-state" style="display: none;">
-                <div class="empty-state-icon">💊</div>
-                <div class="empty-state-title">No se encontraron medicamentos</div>
+                <div class="empty-state-icon">🏢</div>
+                <div class="empty-state-title">No se encontraron proveedores</div>
                 <div class="empty-state-text">Intenta con otros términos de búsqueda o crea uno nuevo</div>
             </div>
         </div>
@@ -506,14 +510,14 @@
         const API_BASE_URL = 'https://backenderp-316e.onrender.com/api';
         
         // Variables globales
-        let allMedications = [];
+        let allSuppliers = [];
         let currentUser = null;
         let searchTimeout = null;
 
         // Elementos del DOM
         const loadingOverlay = document.getElementById('loadingOverlay');
         const alertBox = document.getElementById('alert');
-        const medsTableBody = document.getElementById('medsTableBody');
+        const suppliersTableBody = document.getElementById('suppliersTableBody');
         const emptyState = document.getElementById('emptyState');
         const searchInput = document.getElementById('searchInput');
         const userName = document.getElementById('userName');
@@ -530,7 +534,6 @@
                 return null;
             }
 
-            // Verificar expiración del token (8 horas)
             const loginTime = new Date(localStorage.getItem('loginTime'));
             const now = new Date();
             const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
@@ -564,17 +567,7 @@
 
         // Función para mostrar/ocultar loading
         function toggleLoading(show) {
-            if (show) {
-                loadingOverlay.classList.add('show');
-            } else {
-                loadingOverlay.classList.remove('show');
-            }
-        }
-
-        // Función para formatear precio
-        function formatPrice(price) {
-            if (!price && price !== 0) return 'N/A';
-            return `$${Number(price).toFixed(2)}`;
+            loadingOverlay.classList.toggle('show', show);
         }
 
         // Mostrar información del usuario en navbar
@@ -598,8 +591,8 @@
             }
         }
 
-        // Función para cargar medicamentos
-        async function loadMedications(searchQuery = '') {
+        // Función para cargar proveedores
+        async function loadSuppliers(searchQuery = '') {
             const token = checkAuth();
             if (!token) return;
 
@@ -607,8 +600,8 @@
 
             try {
                 const url = searchQuery 
-                    ? `${API_BASE_URL}/medications?q=${encodeURIComponent(searchQuery)}`
-                    : `${API_BASE_URL}/medications`;
+                    ? `${API_BASE_URL}/suppliers?q=${encodeURIComponent(searchQuery)}`
+                    : `${API_BASE_URL}/suppliers`;
 
                 const response = await fetch(url, {
                     method: 'GET',
@@ -621,70 +614,80 @@
                 const data = await response.json();
 
                 if (response.ok && data.ok) {
-                    allMedications = data.data || [];
-                    renderMedications(allMedications);
+                    allSuppliers = data.data || [];
+                    renderSuppliers(allSuppliers);
                 } else {
-                    showAlert(data.message || 'Error al cargar medicamentos', 'error');
+                    showAlert(data.message || 'Error al cargar proveedores', 'error');
                 }
 
             } catch (error) {
                 console.error('Error:', error);
-                showAlert('Error de conexión al cargar medicamentos', 'error');
+                showAlert('Error de conexión al cargar proveedores', 'error');
             } finally {
                 toggleLoading(false);
             }
         }
 
-        // Función para renderizar medicamentos
-        function renderMedications(medications) {
-            medsTableBody.innerHTML = '';
+        // Función para renderizar proveedores
+        function renderSuppliers(suppliers) {
+            suppliersTableBody.innerHTML = '';
 
-            if (!medications || medications.length === 0) {
+            if (!suppliers || suppliers.length === 0) {
                 emptyState.style.display = 'block';
                 return;
             }
 
             emptyState.style.display = 'none';
 
-            medications.forEach(med => {
+            suppliers.forEach(supplier => {
                 const row = document.createElement('tr');
-                row.onclick = () => viewMedication(med._id);
+                row.onclick = () => viewSupplier(supplier._id);
                 
-                const isActive = med.isActive !== false;
-                const statusBadge = isActive 
-                    ? '<span class="badge badge-active">✓ Activo</span>'
-                    : '<span class="badge badge-inactive">✗ Inactivo</span>';
-                
-                const controlledBadge = med.isControlled 
-                    ? '<span class="badge badge-controlled">🔒 Controlado</span>'
-                    : '';
+                // Contacto
+                const contactInfo = [];
+                if (supplier.emails && supplier.emails.length > 0) {
+                    contactInfo.push(`📧 ${supplier.emails[0]}`);
+                }
+                if (supplier.phones && supplier.phones.length > 0) {
+                    contactInfo.push(`📞 ${supplier.phones[0]}`);
+                }
+
+                const contactHtml = contactInfo.length > 0 
+                    ? `<div class="contact-list">${contactInfo.map(c => `<div class="contact-item">${c}</div>`).join('')}</div>`
+                    : '<span style="color: #999;">Sin contacto</span>';
 
                 row.innerHTML = `
                     <td>
-                        <div class="med-name">${med.name || 'N/A'}</div>
-                        <div class="med-code">${med.code || 'Sin código'}</div>
+                        <div class="supplier-name">${supplier.name || 'N/A'}</div>
+                        <div class="supplier-rfc">${supplier.rfc || 'Sin RFC'}</div>
                     </td>
-                    <td>${med.form || 'N/A'}</td>
-                    <td>${med.strength || 'N/A'}</td>
-                    <td>${med.packSize ? `${med.packSize} ${med.uom || 'unidades'}` : 'N/A'}</td>
-                    <td><span class="badge badge-price">${formatPrice(med.unitPrice)}</span></td>
-                    <td>${statusBadge}</td>
-                    <td>${controlledBadge || '-'}</td>
+                    <td>${contactHtml}</td>
+                    <td>${supplier.paymentTerms || 'No especificado'}</td>
+                    <td>
+                        ${supplier.leadTimeDays 
+                            ? `<span class="badge badge-leadtime">${supplier.leadTimeDays} días</span>` 
+                            : 'No especificado'}
+                    </td>
+                    <td>
+                        ${supplier.defaultCurrency 
+                            ? `<span class="badge badge-currency">${supplier.defaultCurrency}</span>` 
+                            : '<span class="badge badge-currency">MXN</span>'}
+                    </td>
                 `;
-                medsTableBody.appendChild(row);
+                suppliersTableBody.appendChild(row);
             });
         }
 
-        // Función para ver detalles de un medicamento
-        function viewMedication(id) {
-            window.location.href = `medication-detail.html?id=${id}`;
+        // Función para ver detalles de un proveedor
+        function viewSupplier(id) {
+            window.location.href = `supplier-detail.html?id=${id}`;
         }
 
         // Búsqueda con debounce
         searchInput.addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                loadMedications(e.target.value.trim());
+                loadSuppliers(e.target.value.trim());
             }, 500);
         });
 
@@ -692,7 +695,7 @@
         window.addEventListener('load', () => {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('created') === 'true') {
-                showAlert('Medicamento creado exitosamente', 'success');
+                showAlert('Proveedor creado exitosamente', 'success');
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         });
@@ -703,7 +706,7 @@
             if (token) {
                 updateNavbarUser();
                 checkPermissions();
-                loadMedications();
+                loadSuppliers();
             }
         })();
     </script>

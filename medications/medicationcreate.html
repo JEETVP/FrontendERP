@@ -19,7 +19,7 @@
 
         /* Navbar */
         .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #45638B 0%, #45638B 100%);
             padding: 0;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             position: sticky;
@@ -44,6 +44,11 @@
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+
+        .navbar-brand img {
+            height: 60px;
+            width: auto;
         }
 
         .navbar-menu {
@@ -269,7 +274,7 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #45638B 0%, #45638B 100%);
             color: white;
         }
 
@@ -349,7 +354,7 @@
 
         .spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border-top: 4px solid #45638B;
             border-radius: 50%;
             width: 50px;
             height: 50px;
@@ -390,10 +395,11 @@
     <nav class="navbar">
         <div class="navbar-container">
             <div class="navbar-brand">
-                🏥 Sistema Hospitalario
+                <img src="imagotipo.png" alt="Optima Consulting">
             </div>
             <ul class="navbar-menu">
                 <li><a href="users-list.html">Usuarios</a></li>
+                <li><a href="hospitalslist.html">Hospitales</a></li>
                 <li><a href="medications.html" class="active">Medicamentos</a></li>
                 <li><a href="suppliers-list.html">Proveedores</a></li>
                 <li><a href="purchase-orders-list.html">Compras</a></li>
@@ -631,16 +637,15 @@
                             >
                         </div>
 
+                        <!-- CAMBIO: preferredSupplier ahora es un SELECT con proveedores -->
                         <div class="form-group">
                             <label for="preferredSupplier">
                                 ID Proveedor Preferido
                             </label>
-                            <input 
-                                type="text" 
-                                id="preferredSupplier" 
-                                name="preferredSupplier" 
-                                placeholder="ID del proveedor (opcional)"
-                            >
+                            <select id="preferredSupplier" name="preferredSupplier">
+                                <option value="">Sin proveedor preferido</option>
+                            </select>
+                            <small class="help-text">Selecciona un proveedor del catálogo</small>
                         </div>
                     </div>
                 </div>
@@ -724,190 +729,278 @@
     </div>
 
     <script>
-        // Configuración del API
-        const API_BASE_URL = 'https://backenderp-316e.onrender.com/api';
-        
-        // Elementos del DOM
-        const medicationForm = document.getElementById('medicationForm');
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        const alertBox = document.getElementById('alert');
-        const btnSubmit = document.getElementById('btnSubmit');
+  // ============================
+  // Configuración del API
+  // ============================
+  const API_BASE_URL = 'https://backenderp-316e.onrender.com/api';
 
-        // Función para verificar autenticación
-        function checkAuth() {
-            const token = localStorage.getItem('token');
-            const user = localStorage.getItem('user');
-            
-            if (!token || !user) {
-                window.location.href = 'login.html';
-                return null;
-            }
+  // Elementos del DOM
+  const medicationForm         = document.getElementById('medicationForm');
+  const loadingOverlay         = document.getElementById('loadingOverlay');
+  const alertBox               = document.getElementById('alert');
+  const btnSubmit              = document.getElementById('btnSubmit');
+  const preferredSupplierSelect = document.getElementById('preferredSupplier');
 
-            const loginTime = new Date(localStorage.getItem('loginTime'));
-            const now = new Date();
-            const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
-            
-            if (hoursDiff >= 8) {
-                logout();
-                return null;
-            }
+  // ============================
+  // Autenticación
+  // ============================
+  function checkAuth() {
+    const token = localStorage.getItem('token');
+    const user  = localStorage.getItem('user');
+    
+    if (!token || !user) {
+      window.location.href = 'login.html';
+      return null;
+    }
 
-            const currentUser = JSON.parse(user);
-            
-            // Verificar permisos
-            if (!currentUser.isSuperUser && currentUser.role !== 'admin' && currentUser.role !== 'manager') {
-                showAlert('No tienes permisos para crear medicamentos', 'error');
-                setTimeout(() => {
-                    window.location.href = 'medications-list.html';
-                }, 2000);
-                return null;
-            }
+    const loginTimeStr = localStorage.getItem('loginTime');
+    if (!loginTimeStr) {
+      logout();
+      return null;
+    }
 
-            return token;
+    const loginTime = new Date(loginTimeStr);
+    const now       = new Date();
+    const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+
+    if (hoursDiff >= 8) {
+      logout();
+      return null;
+    }
+
+    const currentUser = JSON.parse(user);
+
+    // Solo superuser / admin / manager
+    if (
+      !currentUser.isSuperUser &&
+      currentUser.role !== 'admin' &&
+      currentUser.role !== 'manager'
+    ) {
+      showAlert('No tienes permisos para crear medicamentos', 'error');
+      setTimeout(() => {
+        window.location.href = 'medications-list.html';
+      }, 2000);
+      return null;
+    }
+
+    return token;
+  }
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('loginTime');
+    window.location.href = 'login.html';
+  }
+
+  // ============================
+  // Helpers UI
+  // ============================
+  function showAlert(message, type = 'error') {
+    if (!alertBox) return;
+    alertBox.textContent = message;
+    alertBox.className = `alert alert-${type} show`;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function toggleLoading(show) {
+    if (!loadingOverlay) return;
+    loadingOverlay.classList.toggle('show', show);
+  }
+
+  // ============================
+  // Cargar proveedores
+  // ============================
+  async function loadSuppliers() {
+    const token = localStorage.getItem('token');
+    if (!token || !preferredSupplierSelect) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/suppliers`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
+      });
 
-        // Función para cerrar sesión
-        function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            localStorage.removeItem('loginTime');
-            window.location.href = 'login.html';
+      const data = await res.json();
+
+      if (res.ok && data.ok) {
+        const suppliers = data.data || [];
+
+        suppliers.forEach((supplier) => {
+          const option = document.createElement('option');
+          // Usamos id normalizado (id || _id)
+          option.value = supplier.id || supplier._id;
+          option.textContent = supplier.name;
+          preferredSupplierSelect.appendChild(option);
+        });
+      } else {
+        console.error('Error al cargar proveedores:', data.message);
+      }
+    } catch (error) {
+      console.error('Error de conexión al cargar proveedores:', error);
+    }
+  }
+
+  // ============================
+  // Cancelar formulario
+  // ============================
+  function cancelForm() {
+    if (confirm('¿Estás seguro de que deseas cancelar? Se perderán los datos ingresados.')) {
+      window.location.href = 'medications-list.html';
+    }
+  }
+
+  // Exponer para onclick en HTML, si lo usas
+  window.cancelForm = cancelForm;
+
+  // ============================
+  // Envío del formulario
+  // ============================
+  if (medicationForm) {
+    medicationForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const token = checkAuth();
+      if (!token) return;
+
+      // Construir objeto de datos base
+      const formData = {
+        code:      document.getElementById('code').value.trim(),
+        name:      document.getElementById('name').value.trim(),
+        form:      document.getElementById('form').value || undefined,
+        strength:  document.getElementById('strength').value.trim() || undefined,
+        uom:       document.getElementById('uom').value || 'unit',
+        packSize:  document.getElementById('packSize').value
+                    ? Number(document.getElementById('packSize').value)
+                    : undefined,
+        unitPrice: document.getElementById('unitPrice').value
+                    ? Number(document.getElementById('unitPrice').value)
+                    : undefined,
+        sku:         document.getElementById('sku').value.trim() || undefined,
+        atcCode:     document.getElementById('atcCode').value.trim() || undefined,
+        isControlled: document.getElementById('isControlled').checked,
+        isActive:     document.getElementById('isActive').checked
+      };
+
+      // Códigos de barras
+      const barcodesInput = document.getElementById('barcodes').value.trim();
+      if (barcodesInput) {
+        formData.barcodes = barcodesInput
+          .split(',')
+          .map(b => b.trim())
+          .filter(b => b);
+      }
+
+      // Políticas de inventario
+      const reorderPoint  = document.getElementById('reorderPoint').value;
+      const safetyStock   = document.getElementById('safetyStock').value;
+      const avgMonthly    = document.getElementById('avgMonthlyConsumption').value;
+
+      if (reorderPoint || safetyStock || avgMonthly) {
+        formData.policy = {};
+        if (reorderPoint) formData.policy.reorderPoint = Number(reorderPoint);
+        if (safetyStock)  formData.policy.safetyStock  = Number(safetyStock);
+        if (avgMonthly)   formData.policy.avgMonthlyConsumption = Number(avgMonthly);
+      }
+
+      // ⭐ preferredSupplier opcional, pero sin mandar "undefined"
+      if (preferredSupplierSelect) {
+        const preferredSupplierValue = preferredSupplierSelect.value;
+        if (
+          preferredSupplierValue &&
+          preferredSupplierValue !== 'undefined' &&
+          preferredSupplierValue !== 'null'
+        ) {
+          formData.preferredSupplier = preferredSupplierValue;
         }
+      }
 
-        // Función para mostrar alertas
-        function showAlert(message, type = 'error') {
-            alertBox.textContent = message;
-            alertBox.className = `alert alert-${type} show`;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+      // Almacenamiento (ojo: tu modelo usa temperatureMinC / temperatureMaxC,
+      // pero por ahora respetamos tu campo "temperature" como está en el front)
+      const storageTemp        = document.getElementById('storageTemp').value.trim();
+      const storageConditions  = document.getElementById('storageConditions').value.trim();
 
-        // Función para mostrar/ocultar loading
-        function toggleLoading(show) {
-            loadingOverlay.classList.toggle('show', show);
-        }
+      if (storageTemp || storageConditions) {
+        formData.storage = {};
+        if (storageTemp)       formData.storage.temperature = storageTemp;
+        if (storageConditions) formData.storage.conditions  = storageConditions;
+      }
 
-        // Cancelar formulario
-        function cancelForm() {
-            if (confirm('¿Estás seguro de que deseas cancelar? Se perderán los datos ingresados.')) {
-                window.location.href = 'medications-list.html';
-            }
-        }
+      // Validaciones mínimas
+      if (!formData.code || !formData.name) {
+        showAlert('Código y Nombre son campos requeridos', 'error');
+        return;
+      }
 
-        // Manejar envío del formulario
-        medicationForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const token = checkAuth();
-            if (!token) return;
+      // Deshabilitar botón y mostrar loading
+      if (btnSubmit) {
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = 'Creando...';
+      }
+      toggleLoading(true);
+      if (alertBox) alertBox.classList.remove('show');
 
-            // Construir objeto de datos
-            const formData = {
-                code: document.getElementById('code').value.trim(),
-                name: document.getElementById('name').value.trim(),
-                form: document.getElementById('form').value || undefined,
-                strength: document.getElementById('strength').value.trim() || undefined,
-                uom: document.getElementById('uom').value || 'unit',
-                packSize: document.getElementById('packSize').value ? Number(document.getElementById('packSize').value) : undefined,
-                unitPrice: document.getElementById('unitPrice').value ? Number(document.getElementById('unitPrice').value) : undefined,
-                sku: document.getElementById('sku').value.trim() || undefined,
-                atcCode: document.getElementById('atcCode').value.trim() || undefined,
-                isControlled: document.getElementById('isControlled').checked,
-                isActive: document.getElementById('isActive').checked
-            };
-
-            // Códigos de barras (array)
-            const barcodesInput = document.getElementById('barcodes').value.trim();
-            if (barcodesInput) {
-                formData.barcodes = barcodesInput.split(',').map(b => b.trim()).filter(b => b);
-            }
-
-            // Políticas de inventario
-            const reorderPoint = document.getElementById('reorderPoint').value;
-            const safetyStock = document.getElementById('safetyStock').value;
-            const avgMonthly = document.getElementById('avgMonthlyConsumption').value;
-            const preferredSupplier = document.getElementById('preferredSupplier').value.trim();
-
-            if (reorderPoint || safetyStock || avgMonthly) {
-                formData.policy = {};
-                if (reorderPoint) formData.policy.reorderPoint = Number(reorderPoint);
-                if (safetyStock) formData.policy.safetyStock = Number(safetyStock);
-                if (avgMonthly) formData.policy.avgMonthlyConsumption = Number(avgMonthly);
-            }
-
-            if (preferredSupplier) {
-                formData.preferredSupplier = preferredSupplier;
-            }
-
-            // Almacenamiento
-            const storageTemp = document.getElementById('storageTemp').value.trim();
-            const storageConditions = document.getElementById('storageConditions').value.trim();
-
-            if (storageTemp || storageConditions) {
-                formData.storage = {};
-                if (storageTemp) formData.storage.temperature = storageTemp;
-                if (storageConditions) formData.storage.conditions = storageConditions;
-            }
-
-            // Validaciones
-            if (!formData.code || !formData.name) {
-                showAlert('Código y Nombre son campos requeridos', 'error');
-                return;
-            }
-
-            // Deshabilitar botón y mostrar loading
-            btnSubmit.disabled = true;
-            btnSubmit.textContent = 'Creando...';
-            toggleLoading(true);
-            alertBox.classList.remove('show');
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/medications`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.ok) {
-                    showAlert('Medicamento creado exitosamente', 'success');
-                    
-                    setTimeout(() => {
-                        window.location.href = 'medications-list.html?created=true';
-                    }, 1500);
-
-                } else {
-                    const errorMessage = data.message || 'Error al crear medicamento';
-                    showAlert(errorMessage, 'error');
-                    btnSubmit.disabled = false;
-                    btnSubmit.textContent = 'Crear Medicamento';
-                }
-
-            } catch (error) {
-                console.error('Error:', error);
-                showAlert('Error de conexión. Verifica tu internet e intenta nuevamente.', 'error');
-                btnSubmit.disabled = false;
-                btnSubmit.textContent = 'Crear Medicamento';
-            } finally {
-                toggleLoading(false);
-            }
+      try {
+        const response = await fetch(`${API_BASE_URL}/medications`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
         });
 
-        // Limpiar alertas al escribir
-        document.querySelectorAll('input, select, textarea').forEach(input => {
-            input.addEventListener('input', () => {
-                alertBox.classList.remove('show');
-            });
-        });
+        const data = await response.json();
 
-        // Inicializar
-        (function init() {
-            checkAuth();
-            document.getElementById('code').focus();
-        })();
-    </script>
+        if (response.ok && data.ok) {
+          showAlert('Medicamento creado exitosamente', 'success');
+          setTimeout(() => {
+            window.location.href = 'medications.html?created=true';
+          }, 1500);
+        } else {
+          const errorMessage = data.message || 'Error al crear medicamento';
+          showAlert(errorMessage, 'error');
+          if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = 'Crear Medicamento';
+          }
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        showAlert('Error de conexión. Verifica tu internet e intenta nuevamente.', 'error');
+        if (btnSubmit) {
+          btnSubmit.disabled = false;
+          btnSubmit.textContent = 'Crear Medicamento';
+        }
+      } finally {
+        toggleLoading(false);
+      }
+    });
+  }
+
+  // ============================
+  // Limpiar alertas al escribir
+  // ============================
+  document.querySelectorAll('input, select, textarea').forEach(input => {
+    input.addEventListener('input', () => {
+      if (alertBox) alertBox.classList.remove('show');
+    });
+  });
+
+  // ============================
+  // Inicializar
+  // ============================
+  (function init() {
+    const token = checkAuth();
+    if (token) {
+      loadSuppliers();
+      const codeInput = document.getElementById('code');
+      if (codeInput) codeInput.focus();
+    }
+  })();
+</script>
 </body>
 </html>

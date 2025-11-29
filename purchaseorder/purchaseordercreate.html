@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Orden de Compra - Sistema Hospitalario</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; min-height: 100vh; }
+        /* Navbar */
+        .navbar {
+            /* Cambiado al color solicitado */
+            background: #45638B;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .navbar-brand {
+            padding: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Logo en lugar de texto */
+        .navbar-logo {
+            height: 60px;
+            width: auto;
+            display: block;
+        }
+
+        .navbar-menu {
+            display: flex;
+            list-style: none;
+            gap: 5px;
+        }
+
+        .navbar-menu li a {
+            color: white;
+            text-decoration: none;
+            padding: 20px 18px;
+            display: block;
+            transition: background 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .navbar-menu li a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-menu li a.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-bottom: 3px solid white;
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: white;
+        }
+
+        .user-info {
+            text-align: right;
+            font-size: 13px;
+        }
+
+        .user-name {
+            font-weight: 600;
+        }
+
+        .user-role {
+            opacity: 0.9;
+            font-size: 12px;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: #667eea; text-decoration: none; margin-bottom: 20px; font-size:14px; font-weight:500; }
+        .back-link:hover { text-decoration: underline; }
+        .form-card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 40px; }
+        .form-title { font-size: 28px; color: #333; font-weight: 600; margin-bottom: 30px; }
+        
+        .form-section { margin-bottom: 30px; padding-bottom: 25px; border-bottom: 1px solid #e0e0e0; }
+        .section-title { font-size: 18px; font-weight: 600; color: #333; margin-bottom: 20px; display:flex; align-items:center; gap:8px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-group label { margin-bottom: 8px; color: #333; font-weight: 500; font-size: 14px; }
+        .required { color: #e74c3c; margin-left: 3px; }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline:none;
+            border-color:#667eea;
+            box-shadow:0 0 0 4px rgba(102,126,234,0.1);
+        }
+        .help-text { font-size: 12px; color: #999; margin-top: 5px; }
+        
+        .lines-section { margin-top: 30px; }
+        .line-item { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 15px; position: relative; }
+        .btn-remove-line { position: absolute; top: 15px; right: 15px; background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        .btn-add-line { background: #28a745; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-top: 15px; }
+        .btn-add-line:hover { background:#218838; }
+        
+        .form-actions { display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px; padding-top: 25px; border-top: 1px solid #e0e0e0; }
+        .btn { padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition:all .2s; }
+        .btn-primary { background: linear-gradient(135deg, #45638B 0%, #45638B 100%); color: white; }
+        .btn-primary:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 4px 12px rgba(69,99,139,0.4); }
+        .btn-primary:disabled { background:#ccc; cursor:not-allowed; box-shadow:none; }
+        .btn-secondary { background: #f5f5f5; color: #666; }
+        .btn-secondary:hover { background:#e0e0e0; }
+        
+        .alert { padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: none; font-size:14px; }
+        .alert.show { display: block; }
+        .alert-error { background-color: #fee; color: #c33; border-left: 4px solid #c33; }
+        .alert-success { background-color: #efe; color: #3c3; border-left: 4px solid #3c3; }
+        
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); z-index: 1000; justify-content: center; align-items: center; }
+        .loading-overlay.show { display: flex; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            .form-card { padding:24px; }
+            .form-grid { grid-template-columns:1fr; }
+            .form-actions { flex-direction:column; }
+            .btn { width:100%; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">
+                <img src="imagotipo.png" alt="Sistema Hospitalario" class="navbar-logo">
+            </div>
+            <ul class="navbar-menu">
+                <li><a href="userslist.html">Usuarios</a></li>
+                <li><a href="hospitalslist.html">Hospitales</a></li>
+                <li><a href="medications.html" class="active">Medicamentos</a></li>
+                <li><a href="supplierslist.html">Proveedores</a></li>
+                <li><a href="purchaseorderlist.html">Compras</a></li>
+                <li><a href="inventorytransactionslist.html">Inventario</a></li>
+                <li><a href="notificationslist.html">Notificaciones</a></li>
+            </ul>
+            <div class="navbar-user">
+                <div class="user-info">
+                    <div class="user-name" id="userName">Usuario</div>
+                    <div class="user-role" id="userRole">Rol</div>
+                </div>
+                <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+            </div>
+        </div>
+    </nav>
+    <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
+
+    <div class="container">
+        <a href="purchaseorderlist.html" class="back-link">← Volver a lista</a>
+
+        <div class="form-card">
+            <h1 class="form-title">Nueva Orden de Compra</h1>
+
+            <div id="alert" class="alert"></div>
+
+            <form id="poForm">
+                <!-- INFORMACIÓN GENERAL -->
+                <div class="form-section">
+                    <h3 class="section-title">📋 Información General</h3>
+                    <div class="form-grid">
+                        <!-- Hospital -->
+                        <div class="form-group">
+                            <label for="hospitalSelect">
+                                Hospital <span class="required">*</span>
+                            </label>
+                            <select id="hospitalSelect" required>
+                                <option value="">Seleccione un hospital</option>
+                            </select>
+                        </div>
+
+                        <!-- Proveedor -->
+                        <div class="form-group">
+                            <label for="supplierSelect">
+                                Proveedor <span class="required">*</span>
+                            </label>
+                            <select id="supplierSelect" required>
+                                <option value="">Seleccione un proveedor</option>
+                            </select>
+                        </div>
+
+                        <!-- Moneda -->
+                        <div class="form-group">
+                            <label for="currency">Moneda</label>
+                            <select id="currency">
+                                <option value="MXN">MXN</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                            </select>
+                        </div>
+
+                        <!-- Tasa de impuesto -->
+                        <div class="form-group">
+                            <label for="taxRate">Tasa de Impuesto</label>
+                            <input type="number" id="taxRate" value="0.16" step="0.01" min="0" max="1">
+                            <small class="help-text">Ej: 0.16 para IVA 16%</small>
+                        </div>
+
+                        <!-- Notas -->
+                        <div class="form-group full-width">
+                            <label for="notes">Notas</label>
+                            <textarea id="notes" rows="3" placeholder="Observaciones..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LÍNEAS -->
+                <div class="form-section lines-section">
+                    <h3 class="section-title">📦 Líneas de Productos</h3>
+                    <div id="linesContainer"></div>
+                    <button type="button" class="btn-add-line" id="btnAddLine">➕ Agregar Línea</button>
+                </div>
+
+                <!-- ACCIONES -->
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="cancel()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmit">Crear Orden</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://backenderp-316e.onrender.com/api';
+
+        let lineCount = 0;
+        let medicationsCache = [];
+        let hospitalsCache = [];
+        let suppliersCache = [];
+
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const alertBox = document.getElementById('alert');
+        const btnSubmit = document.getElementById('btnSubmit');
+        const btnAddLine = document.getElementById('btnAddLine');
+        const hospitalSelect = document.getElementById('hospitalSelect');
+        const supplierSelect = document.getElementById('supplierSelect');
+
+        // ============================
+        // Helpers de auth / UI
+        // ============================
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const userStr = localStorage.getItem('user');
+
+            if (!token || !userStr) {
+                window.location.href = 'login.html';
+                return null;
+            }
+
+            const loginTimeStr = localStorage.getItem('loginTime');
+            if (!loginTimeStr) {
+                logout();
+                return null;
+            }
+            const loginTime = new Date(loginTimeStr);
+            const now = new Date();
+            const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+            if (hoursDiff >= 8) {
+                logout();
+                return null;
+            }
+
+            const user = JSON.parse(userStr);
+            if (!user.isSuperUser && user.role !== 'admin' && user.role !== 'manager') {
+                alert('No tienes permisos para crear órdenes de compra');
+                window.location.href = 'purchaseorderlist.html';
+                return null;
+            }
+
+            return token;
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('loginTime');
+            window.location.href = 'login.html';
+        }
+
+        function toggleLoading(show) {
+            if (show) loadingOverlay.classList.add('show');
+            else loadingOverlay.classList.remove('show');
+        }
+
+        function showAlert(message, type = 'error') {
+            alertBox.textContent = message;
+            alertBox.className = `alert alert-${type} show`;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // limpiar alerta cuando se escribe
+        document.addEventListener('input', () => {
+            if (alertBox.classList.contains('show')) {
+                alertBox.classList.remove('show');
+            }
+        });
+
+        // ============================
+        // Carga de catálogos
+        // ============================
+        async function loadHospitals(token) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/hospitals`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await res.json();
+                if (res.ok && data.ok) {
+                    hospitalsCache = data.data || [];
+                    hospitalsCache.forEach(h => {
+                        const opt = document.createElement('option');
+                        opt.value = h.id || h._id;
+                        opt.textContent = `${h.name} (${h.code})`;
+                        hospitalSelect.appendChild(opt);
+                    });
+                } else {
+                    console.error('Error al cargar hospitales', data.message);
+                }
+            } catch (err) {
+                console.error('Error de conexión cargando hospitales', err);
+            }
+        }
+
+        async function loadSuppliers(token) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/suppliers`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await res.json();
+                if (res.ok && data.ok) {
+                    suppliersCache = data.data || [];
+                    suppliersCache.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.id || s._id;
+                        opt.textContent = `${s.name} (${s.rfc || 'SIN RFC'})`;
+                        supplierSelect.appendChild(opt);
+                    });
+                } else {
+                    console.error('Error al cargar proveedores', data.message);
+                }
+            } catch (err) {
+                console.error('Error de conexión cargando proveedores', err);
+            }
+        }
+
+        async function loadMedications(token) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/medications`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await res.json();
+                if (res.ok && data.ok) {
+                    medicationsCache = data.data || [];
+                } else {
+                    console.error('Error al cargar medicamentos', data.message);
+                }
+            } catch (err) {
+                console.error('Error de conexión cargando medicamentos', err);
+            }
+        }
+
+        // ============================
+        // Líneas de productos
+        // ============================
+        function buildUomSelectHtml() {
+            return `
+                <select class="line-uom">
+                    <option value="unit">Unidad</option>
+                    <option value="box">Caja</option>
+                    <option value="bottle">Frasco</option>
+                    <option value="vial">Vial</option>
+                    <option value="ampoule">Ampolleta</option>
+                    <option value="tube">Tubo</option>
+                    <option value="pack">Paquete</option>
+                </select>
+            `;
+        }
+
+        function buildMedicationOptionsHtml() {
+            let html = '<option value="">Seleccione un medicamento</option>';
+            medicationsCache.forEach(m => {
+                const id = m.id || m._id;
+                const label = `${m.name} (${m.code})`;
+                html += `<option value="${id}">${label}</option>`;
+            });
+            return html;
+        }
+
+        function addLine() {
+            lineCount++;
+            const container = document.getElementById('linesContainer');
+            const lineDiv = document.createElement('div');
+            lineDiv.className = 'line-item';
+            lineDiv.id = `line-${lineCount}`;
+
+            lineDiv.innerHTML = `
+                <button type="button" class="btn-remove-line" onclick="removeLine(${lineCount})">✕ Eliminar</button>
+                <div class="form-grid" style="margin-top: 10px;">
+                    <div class="form-group">
+                        <label>Medicamento <span class="required">*</span></label>
+                        <select class="line-medication" required>
+                            ${buildMedicationOptionsHtml()}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Descripción</label>
+                        <input type="text" class="line-description" placeholder="Descripción">
+                    </div>
+                    <div class="form-group">
+                        <label>Cantidad <span class="required">*</span></label>
+                        <input type="number" class="line-qty" required min="1" step="1" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Precio Unitario <span class="required">*</span></label>
+                        <input type="number" class="line-price" required min="0" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Unidad de Medida</label>
+                        ${buildUomSelectHtml()}
+                    </div>
+                </div>
+            `;
+            container.appendChild(lineDiv);
+        }
+
+        function removeLine(id) {
+            const el = document.getElementById(`line-${id}`);
+            if (el) el.remove();
+        }
+
+        window.removeLine = removeLine; // para el onclick inline
+
+        function cancel() {
+            if (confirm('¿Cancelar? Se perderán los datos ingresados.')) {
+                window.location.href = 'purchaseorderlist.html';
+            }
+        }
+        window.cancel = cancel;
+
+        // ============================
+        // Envío del formulario
+        // ============================
+        document.getElementById('poForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = checkAuth();
+            if (!token) return;
+
+            // Validar hospital y proveedor
+            if (!hospitalSelect.value) {
+                showAlert('Selecciona un hospital.', 'error');
+                return;
+            }
+            if (!supplierSelect.value) {
+                showAlert('Selecciona un proveedor.', 'error');
+                return;
+            }
+
+            // Construir líneas
+            const lines = [];
+            document.querySelectorAll('.line-item').forEach(line => {
+                const medicationId = line.querySelector('.line-medication').value;
+                const qty = parseFloat(line.querySelector('.line-qty').value);
+                const unitPrice = parseFloat(line.querySelector('.line-price').value);
+                const description = line.querySelector('.line-description').value.trim();
+                const uom = line.querySelector('.line-uom').value;
+
+                if (medicationId && qty > 0 && !Number.isNaN(unitPrice)) {
+                    lines.push({ medication: medicationId, qty, unitPrice, description, uom });
+                }
+            });
+
+            if (lines.length === 0) {
+                showAlert('Debes agregar al menos una línea de producto completa.', 'error');
+                return;
+            }
+
+            const taxRateValue = parseFloat(document.getElementById('taxRate').value || '0');
+
+            const formData = {
+                hospital: hospitalSelect.value,
+                supplier: supplierSelect.value,
+                currency: document.getElementById('currency').value,
+                taxRate: isNaN(taxRateValue) ? 0 : taxRateValue,
+                lines,
+                notes: document.getElementById('notes').value.trim() || undefined
+            };
+
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = 'Creando...';
+            toggleLoading(true);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/purchase-orders`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.ok) {
+                    showAlert('Orden de compra creada exitosamente', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'purchaseorderlist.html?created=true';
+                    }, 1500);
+                } else {
+                    const msg = data.message || 'Error al crear la orden de compra';
+                    showAlert(msg, 'error');
+                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = 'Crear Orden';
+                }
+            } catch (error) {
+                console.error(error);
+                showAlert('Error de conexión. Intenta nuevamente.', 'error');
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = 'Crear Orden';
+            } finally {
+                toggleLoading(false);
+            }
+        });
+
+        // ============================
+        // Inicialización
+        // ============================
+        (async function init() {
+            const token = checkAuth();
+            if (!token) return;
+
+            toggleLoading(true);
+            try {
+                await Promise.all([
+                    loadHospitals(token),
+                    loadSuppliers(token),
+                    loadMedications(token)
+                ]);
+
+                // Primera línea por defecto
+                addLine();
+            } finally {
+                toggleLoading(false);
+            }
+
+            if (btnAddLine) {
+                btnAddLine.addEventListener('click', () => {
+                    if (!medicationsCache.length) {
+                        showAlert('No hay medicamentos cargados para seleccionar.', 'error');
+                        return;
+                    }
+                    addLine();
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
